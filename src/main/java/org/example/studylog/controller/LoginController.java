@@ -15,7 +15,7 @@ public class LoginController {
     @GetMapping("/main")
     @ResponseBody
     public String main() {
-        return "로그인 성공!";
+        return "메인 페이지";
     }
 
     @GetMapping("/success")
@@ -23,5 +23,12 @@ public class LoginController {
     public String success(){
         return "요청 성공!";
     }
+
+    @GetMapping("/signup")
+    @ResponseBody
+    public String signup(){
+        return "회원가입 페이지";
+    }
+
 
 }
