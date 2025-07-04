@@ -4,6 +4,8 @@ import org.example.studylog.jwt.JWTFilter;
 import org.example.studylog.jwt.JWTUtil;
 import org.example.studylog.oauth2.CustomFailureHandler;
 import org.example.studylog.oauth2.CustomSuccessHandler;
+import org.example.studylog.oauth2.ProfileCheckFilter;
+import org.example.studylog.repository.UserRepository;
 import org.example.studylog.service.oauth.CustomOAuth2UserService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -12,9 +14,8 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.oauth2.client.web.OAuth2LoginAuthenticationFilter;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 
 @Configuration
 @EnableWebSecurity
@@ -24,12 +25,14 @@ public class SecurityConfig {
     private final CustomSuccessHandler customSuccessHandler;
     private final CustomFailureHandler customFailureHandler;
     private final JWTUtil jwtUtil;
+    private final UserRepository userRepository;
 
-    public SecurityConfig(CustomOAuth2UserService customOAuth2UserService, CustomSuccessHandler customSuccessHandler, JWTUtil jwtUtil, CustomFailureHandler customFailureHandler) {
+    public SecurityConfig(CustomOAuth2UserService customOAuth2UserService, CustomSuccessHandler customSuccessHandler, CustomFailureHandler customFailureHandler, JWTUtil jwtUtil, UserRepository userRepository) {
         this.customOAuth2UserService = customOAuth2UserService;
         this.customSuccessHandler = customSuccessHandler;
         this.customFailureHandler = customFailureHandler;
         this.jwtUtil = jwtUtil;
+        this.userRepository = userRepository;
     }
 
     @Bean
@@ -51,6 +54,10 @@ public class SecurityConfig {
         http
                 .addFilterAfter(new JWTFilter(jwtUtil), OAuth2LoginAuthenticationFilter.class);
 
+        // ProfileCheckFilter 추가
+        http
+                .addFilterAfter(new ProfileCheckFilter(userRepository), OAuth2LoginAuthenticationFilter.class);
+
         // oauth2
 
         http
@@ -64,7 +71,7 @@ public class SecurityConfig {
         // 경로별 인가 작업
         http
                 .authorizeHttpRequests((auth) -> auth
-                        .requestMatchers("/", "/login", "/main").permitAll()
+                        .requestMatchers("/", "/login").permitAll()
                         .anyRequest().authenticated());
 
         // 세션 설정 : STATELESS
