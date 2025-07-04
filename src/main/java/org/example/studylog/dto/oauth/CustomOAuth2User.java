@@ -38,11 +38,11 @@ public class CustomOAuth2User implements OAuth2User {
 
     @Override
     public String getName() {
-        return userDTO.getName();
+        return userDTO.getOauthId();
     }
 
-    public String getUsername(){
-        return userDTO.getUsername();
+    public String getNickname(){
+        return userDTO.getNickname();
     }
 
     public boolean isProfileCompleted(){

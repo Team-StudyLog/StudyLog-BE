@@ -46,5 +46,5 @@ public class User {
     private String code;
 
     @Column(nullable = false, unique = true)
-    private String username;
+    private String oauthId;
 }

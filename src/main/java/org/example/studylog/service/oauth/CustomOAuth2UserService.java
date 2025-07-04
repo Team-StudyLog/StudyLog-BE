@@ -47,11 +47,11 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         }
 
         // 로그인 완료시 로직
-        String username = oAuth2Response.getProvider()+" "+oAuth2Response.getProviderId();
-        System.out.println("유저네임: " + username);
+        String oauthId = oAuth2Response.getProvider()+"_"+oAuth2Response.getProviderId();
+        System.out.println("유저네임: " + oauthId);
 
-        // username으로 로그인한 유저가 이미 존재하는지 확인
-        User existData = userRepository.findByUsername(username);
+        // oauthId으로 로그인한 유저가 이미 존재하는지 확인
+        User existData = userRepository.findByOauthId(oauthId);
         System.out.println("현재 데이터: " + existData);
 
         if (existData == null) {
@@ -63,14 +63,14 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
                     .isProfileCompleted(false)
                     .uuid(UUID.randomUUID())
                     .code(generateCode())
-                    .username(username)
+                    .oauthId(oauthId)
                     .build();
 
             userRepository.save(user);
 
             UserDTO userDTO = new UserDTO();
-            userDTO.setUsername(username);
-            userDTO.setName(oAuth2Response.getName());
+            userDTO.setOauthId(oauthId);
+            userDTO.setNickname(oAuth2Response.getName());
             userDTO.setRole(String.valueOf(user.getRole()));
             userDTO.setProfileCompleted(user.isProfileCompleted());
 
@@ -78,8 +78,8 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         }
         else {
             UserDTO userDTO = new UserDTO();
-            userDTO.setUsername(existData.getUsername());
-            userDTO.setName(existData.getNickname());
+            userDTO.setOauthId(existData.getOauthId());
+            userDTO.setNickname(existData.getNickname());
             userDTO.setRole(String.valueOf(existData.getRole()));
             userDTO.setProfileCompleted(existData.isProfileCompleted());
 
