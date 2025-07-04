@@ -5,7 +5,8 @@ import org.example.studylog.dto.oauth.CustomOAuth2User;
 import org.example.studylog.dto.oauth.KakaoResponse;
 import org.example.studylog.dto.oauth.OAuth2Response;
 import org.example.studylog.dto.oauth.UserDTO;
-import org.example.studylog.entity.Users;
+import org.example.studylog.entity.user.Role;
+import org.example.studylog.entity.user.User;
 import org.example.studylog.repository.UserRepository;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
@@ -13,6 +14,7 @@ import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 
+import java.util.Random;
 import java.util.UUID;
 
 @Service
@@ -49,53 +51,55 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         System.out.println("유저네임: " + username);
 
         // username으로 로그인한 유저가 이미 존재하는지 확인
-        Users existData = userRepository.findByUsername(username);
+        User existData = userRepository.findByUsername(username);
         System.out.println("현재 데이터: " + existData);
 
         if (existData == null) {
-            // 로깅
-            log.info("username: {}", username);
-            log.info("nickname: {}", oAuth2Response.getName());
+            User user = User.builder()
+                    .nickname(oAuth2Response.getName())
+                    .profileImage(oAuth2Response.getProfileImage())
+                    .level(0)
+                    .role(Role.ROLE_USER)
+                    .isProfileCompleted(false)
+                    .uuid(UUID.randomUUID())
+                    .code(generateCode())
+                    .username(username)
+                    .build();
 
-            Users user = new Users();
-            user.setUsername(username);
-            user.setNickname(oAuth2Response.getName());
-            user.setProfileImage(oAuth2Response.getProfileImage());
-            user.setLevel(0);
-            user.setUuid(UUID.randomUUID());
-            user.setRole("ROLE_A");
-//            user.setCode();
-
-            try{
-                userRepository.save(user);
-            } catch (Exception e){
-                log.error("User 저장 실패", e);
-            }
+            userRepository.save(user);
 
             UserDTO userDTO = new UserDTO();
             userDTO.setUsername(username);
             userDTO.setName(oAuth2Response.getName());
-            userDTO.setRole("ROLE_A");
+            userDTO.setRole(String.valueOf(user.getRole()));
 
             return new CustomOAuth2User(userDTO);
         }
-        // 데이터가 이미 존재하면 업데이트
         else {
-            // 로깅
-            log.info("username: {}", username);
-            log.info("nickname: {}", oAuth2Response.getName());
-
-            existData.setNickname(oAuth2Response.getName());
-            existData.setProfileImage(oAuth2Response.getProfileImage());
-            userRepository.save(existData);
-
             UserDTO userDTO = new UserDTO();
             userDTO.setUsername(existData.getUsername());
             userDTO.setName(existData.getNickname());
-            userDTO.setRole(existData.getRole());
+            userDTO.setRole(String.valueOf(existData.getRole()));
 
             return new CustomOAuth2User(userDTO);
         }
+    }
 
+    private String generateCode(){
+        String code;
+        do{
+            code = createCode(5);
+        } while(userRepository.existsByCode(code));
+        return code;
+    }
+
+    private String createCode(int length){
+        String chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+        StringBuilder sb = new StringBuilder();
+        Random rand = new Random();
+        for(int i=0; i<length; i++){
+            sb.append(chars.charAt(rand.nextInt(chars.length())));
+        }
+        return sb.toString();
     }
 }
