@@ -47,34 +47,17 @@ public class JWTFilter extends OncePerRequestFilter {
         }
 
 
-        //Authorization 헤더 검증
+        //Authorization 검증
         if (authorization == null) {
             log.warn("JWT 토큰이 없음 (token null)");
             System.out.println("token null");
             filterChain.doFilter(request, response);
 
-            //조건이 해당되면 메소드 종료 (필수)
             return;
         }
 
         //토큰
         String token = authorization;
-
-
-        /*
-        // 1. Authorization 헤더에서 토큰 추출
-        String authorizationHeader = request.getHeader("Authorization");
-
-        // 2. 헤더가 없거나 "Bearer "로 시작하지 않으면 필터 통과
-        if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
-            log.warn("Authorization 헤더 없음 또는 형식이 잘못됨: {}", authorizationHeader);
-            filterChain.doFilter(request, response);
-            return;
-        }
-
-        // 3. "Bearer " 이후의 순수 토큰 추출
-        String token = authorizationHeader.substring(7);
-        */
 
         //토큰 소멸 시간 검증
         if (jwtUtil.isExpired(token)) {
