@@ -1,5 +1,6 @@
 package org.example.studylog.jwt;
 
+import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.Cookie;
@@ -14,6 +15,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.io.PrintWriter;
 
 @Slf4j
 public class JWTFilter extends OncePerRequestFilter {
@@ -28,8 +30,8 @@ public class JWTFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
 
 
-        //cookie들을 불러온 뒤 Authorization Key에 담긴 쿠키를 찾음
-        String authorization = null;
+        //cookie들을 불러온 뒤 access Key에 담긴 쿠키를 찾음
+        String accessToken = null;
 
         Cookie[] cookies = request.getCookies();
 
@@ -37,9 +39,9 @@ public class JWTFilter extends OncePerRequestFilter {
             for (Cookie cookie : cookies) {
                 log.debug("요청 쿠키: {}={}", cookie.getName(), cookie.getValue());
                 System.out.println(cookie.getName());
-                if (cookie.getName().equals("Authorization")) {
+                if (cookie.getName().equals("access")) {
 
-                    authorization = cookie.getValue();
+                    accessToken = cookie.getValue();
                 }
             }
         } else{
@@ -48,7 +50,7 @@ public class JWTFilter extends OncePerRequestFilter {
 
 
         //Authorization 검증
-        if (authorization == null) {
+        if (accessToken == null) {
             log.warn("JWT 토큰이 없음 (token null)");
             System.out.println("token null");
             filterChain.doFilter(request, response);
@@ -56,22 +58,30 @@ public class JWTFilter extends OncePerRequestFilter {
             return;
         }
 
-        //토큰
-        String token = authorization;
+        //토큰 만료 여부 확인
+        try{
+            jwtUtil.isExpired(accessToken);
+        } catch (ExpiredJwtException e){
+            PrintWriter writer = response.getWriter();
+            writer.print("access token expired");
 
-        //토큰 소멸 시간 검증
-        if (jwtUtil.isExpired(token)) {
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            return;
+        }
 
-            System.out.println("token expired");
-            filterChain.doFilter(request, response);
+        // access token 인지 확인
+        String category = jwtUtil.getCategory(accessToken);
+        if(!category.equals("access")){
+            PrintWriter writer = response.getWriter();
+            writer.print("invalid access token");
 
-            //조건이 해당되면 메소드 종료 (필수)
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             return;
         }
 
         //토큰에서 oauthId role 획득
-        String oauthId = jwtUtil.getOauthId(token);
-        String role = jwtUtil.getRole(token);
+        String oauthId = jwtUtil.getOauthId(accessToken);
+        String role = jwtUtil.getRole(accessToken);
 
         log.info("JWT 인증 성공: oauthId={}, role={}", oauthId, role);
 
@@ -89,6 +99,5 @@ public class JWTFilter extends OncePerRequestFilter {
         SecurityContextHolder.getContext().setAuthentication(authToken);
 
         filterChain.doFilter(request, response);
-
     }
 }
