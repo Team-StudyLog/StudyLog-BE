@@ -7,6 +7,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.example.studylog.dto.oauth.CustomOAuth2User;
 import org.example.studylog.jwt.JWTUtil;
+import org.example.studylog.util.CookieUtil;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
@@ -45,8 +46,8 @@ public class CustomSuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
 
         log.info("유저 이름: {}", customUserDetails.getName());
 
-        response.addCookie(createCookie("access", access));
-        response.addCookie(createCookie("refresh", refresh));
+        response.addCookie(CookieUtil.createCookie("access", access));
+        response.addCookie(CookieUtil.createCookie("refresh", refresh));
 
         // 사용자의 정보 입력 유무에 따라 분기
         if(!customUserDetails.isProfileCompleted()){
@@ -56,14 +57,4 @@ public class CustomSuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
         }
     }
 
-    private Cookie createCookie(String key, String value) {
-
-        Cookie cookie = new Cookie(key, value);
-        cookie.setMaxAge(60*60*60);
-        //cookie.setSecure(true);
-        cookie.setPath("/");
-        cookie.setHttpOnly(true);
-
-        return cookie;
-    }
 }
