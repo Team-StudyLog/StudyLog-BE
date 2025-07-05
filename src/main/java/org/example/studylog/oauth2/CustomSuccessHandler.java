@@ -39,11 +39,14 @@ public class CustomSuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
         GrantedAuthority auth = iterator.next();
         String role = auth.getAuthority();
 
-        String token = jwtUtil.createJwt(oauthId, role, 60*60*60L);
+        // 토큰 생성
+        String access = jwtUtil.createJwt("access", oauthId, role, 600000L);
+        String refresh = jwtUtil.createJwt("refresh", oauthId, role, 86400000L);
 
         log.info("유저 이름: {}", customUserDetails.getName());
 
-        response.addCookie(createCookie("Authorization", token));
+        response.addCookie(createCookie("access", access));
+        response.addCookie(createCookie("refresh", refresh));
 
         // 사용자의 정보 입력 유무에 따라 분기
         if(!customUserDetails.isProfileCompleted()){
