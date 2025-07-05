@@ -55,8 +55,11 @@ public class ReissueController {
         String role = jwtUtil.getRole(refresh);
 
         String newAccess = jwtUtil.createJwt("access", oauthId, role, 600000L);
+        String newRefresh = jwtUtil.createJwt("refresh", oauthId, role, 86400000L);
 
         response.addCookie(CookieUtil.createCookie("access", newAccess));
+        response.addCookie(CookieUtil.createCookie("refresh", newRefresh));
+
         return new ResponseEntity<>(HttpStatus.OK);
     }
 }
