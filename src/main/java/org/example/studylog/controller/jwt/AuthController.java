@@ -9,9 +9,11 @@ import org.example.studylog.util.CookieUtil;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
+@RequestMapping("/auth")
 public class AuthController {
 
     private final JWTUtil jwtUtil;
@@ -22,7 +24,7 @@ public class AuthController {
         this.tokenService = tokenService;
     }
 
-    @PostMapping("/reissue")
+    @PostMapping("/token-reissue")
     public ResponseEntity<?> reissue(HttpServletRequest request, HttpServletResponse response){
 
         // 쿠키에서 refresh 토큰 얻기
