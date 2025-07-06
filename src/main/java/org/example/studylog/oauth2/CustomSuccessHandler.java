@@ -8,6 +8,7 @@ import org.example.studylog.dto.oauth.CustomOAuth2User;
 import org.example.studylog.entity.RefreshEntity;
 import org.example.studylog.jwt.JWTUtil;
 import org.example.studylog.repository.RefreshRepository;
+import org.example.studylog.service.oauth.TokenService;
 import org.example.studylog.util.CookieUtil;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
@@ -24,11 +25,11 @@ import java.util.Iterator;
 public class CustomSuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
 
     private final JWTUtil jwtUtil;
-    private final RefreshRepository refreshRepository;
+    private final TokenService tokenService;
 
-    public CustomSuccessHandler(JWTUtil jwtUtil, RefreshRepository refreshRepository) {
+    public CustomSuccessHandler(JWTUtil jwtUtil, TokenService tokenService) {
         this.jwtUtil = jwtUtil;
-        this.refreshRepository = refreshRepository;
+        this.tokenService = tokenService;
     }
 
     @Override
@@ -49,7 +50,7 @@ public class CustomSuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
         String refresh = jwtUtil.createJwt("refresh", oauthId, role, 86400000L);
 
         // refresh 토큰 저장
-        addRefreshToken(oauthId, refresh, 86400000L);
+        tokenService.addRefreshEntity(oauthId, refresh, 86400000L);
 
         response.addCookie(CookieUtil.createCookie("access", access));
         response.addCookie(CookieUtil.createCookie("refresh", refresh));
@@ -60,18 +61,6 @@ public class CustomSuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
         } else{
             response.sendRedirect("http://localhost:8080/main");
         }
-    }
-
-    private void addRefreshToken(String oauthId, String refresh, Long expiredMs){
-        Date date = new Date(System.currentTimeMillis() + expiredMs);
-
-        RefreshEntity refreshEntity = RefreshEntity.builder()
-                .oauthId(oauthId)
-                .refresh(refresh)
-                .expiration(date.toString())
-                .build();
-
-        refreshRepository.save(refreshEntity);
     }
 
 }
