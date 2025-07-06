@@ -5,10 +5,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.example.studylog.dto.oauth.CustomOAuth2User;
-import org.example.studylog.entity.RefreshEntity;
 import org.example.studylog.jwt.JWTUtil;
-import org.example.studylog.repository.RefreshRepository;
-import org.example.studylog.service.oauth.TokenService;
+import org.example.studylog.service.TokenService;
 import org.example.studylog.util.CookieUtil;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
@@ -17,7 +15,6 @@ import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.util.Collection;
-import java.util.Date;
 import java.util.Iterator;
 
 @Component

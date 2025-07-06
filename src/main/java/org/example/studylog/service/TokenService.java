@@ -1,4 +1,4 @@
-package org.example.studylog.service.oauth;
+package org.example.studylog.service;
 
 import io.jsonwebtoken.ExpiredJwtException;
 import org.example.studylog.entity.RefreshEntity;
