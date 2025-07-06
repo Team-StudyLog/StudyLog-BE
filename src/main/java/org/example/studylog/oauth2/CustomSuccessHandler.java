@@ -1,12 +1,13 @@
 package org.example.studylog.oauth2;
 
 import jakarta.servlet.ServletException;
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.example.studylog.dto.oauth.CustomOAuth2User;
+import org.example.studylog.entity.RefreshEntity;
 import org.example.studylog.jwt.JWTUtil;
+import org.example.studylog.repository.RefreshRepository;
 import org.example.studylog.util.CookieUtil;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
@@ -15,6 +16,7 @@ import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.util.Collection;
+import java.util.Date;
 import java.util.Iterator;
 
 @Component
@@ -22,9 +24,11 @@ import java.util.Iterator;
 public class CustomSuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
 
     private final JWTUtil jwtUtil;
+    private final RefreshRepository refreshRepository;
 
-    public CustomSuccessHandler(JWTUtil jwtUtil) {
+    public CustomSuccessHandler(JWTUtil jwtUtil, RefreshRepository refreshRepository) {
         this.jwtUtil = jwtUtil;
+        this.refreshRepository = refreshRepository;
     }
 
     @Override
@@ -44,7 +48,8 @@ public class CustomSuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
         String access = jwtUtil.createJwt("access", oauthId, role, 600000L);
         String refresh = jwtUtil.createJwt("refresh", oauthId, role, 86400000L);
 
-        log.info("유저 이름: {}", customUserDetails.getName());
+        // refresh 토큰 저장
+        addRefreshToken(oauthId, refresh, 86400000L);
 
         response.addCookie(CookieUtil.createCookie("access", access));
         response.addCookie(CookieUtil.createCookie("refresh", refresh));
@@ -55,6 +60,18 @@ public class CustomSuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
         } else{
             response.sendRedirect("http://localhost:8080/main");
         }
+    }
+
+    private void addRefreshToken(String oauthId, String refresh, Long expiredMs){
+        Date date = new Date(System.currentTimeMillis() + expiredMs);
+
+        RefreshEntity refreshEntity = RefreshEntity.builder()
+                .oauthId(oauthId)
+                .refresh(refresh)
+                .expiration(date.toString())
+                .build();
+
+        refreshRepository.save(refreshEntity);
     }
 
 }
