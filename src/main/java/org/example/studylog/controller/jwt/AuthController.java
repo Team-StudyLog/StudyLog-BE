@@ -1,12 +1,9 @@
 package org.example.studylog.controller.jwt;
 
-import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.example.studylog.entity.RefreshEntity;
 import org.example.studylog.jwt.JWTUtil;
-import org.example.studylog.repository.RefreshRepository;
 import org.example.studylog.service.oauth.TokenService;
 import org.example.studylog.util.CookieUtil;
 import org.springframework.http.HttpStatus;
@@ -14,15 +11,13 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.Date;
-
 @RestController
-public class ReissueController {
+public class AuthController {
 
     private final JWTUtil jwtUtil;
     private final TokenService tokenService;
 
-    public ReissueController(JWTUtil jwtUtil, TokenService tokenService) {
+    public AuthController(JWTUtil jwtUtil, TokenService tokenService) {
         this.jwtUtil = jwtUtil;
         this.tokenService = tokenService;
     }
