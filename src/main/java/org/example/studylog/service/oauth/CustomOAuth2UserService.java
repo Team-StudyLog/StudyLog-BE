@@ -1,10 +1,7 @@
 package org.example.studylog.service.oauth;
 
 import lombok.extern.slf4j.Slf4j;
-import org.example.studylog.dto.oauth.CustomOAuth2User;
-import org.example.studylog.dto.oauth.KakaoResponse;
-import org.example.studylog.dto.oauth.OAuth2Response;
-import org.example.studylog.dto.oauth.UserDTO;
+import org.example.studylog.dto.oauth.*;
 import org.example.studylog.entity.user.Role;
 import org.example.studylog.entity.user.User;
 import org.example.studylog.repository.UserRepository;
@@ -41,7 +38,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
             oAuth2Response = new KakaoResponse(oAuth2User.getAttributes());
 
         } else if (registrationId.equals("google")) {
-
+            oAuth2Response = new GoogleResponse(oAuth2User.getAttributes());
         } else {
             return null;
         }
