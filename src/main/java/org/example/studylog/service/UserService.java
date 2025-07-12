@@ -20,7 +20,7 @@ public class UserService {
 
         MultipartFile file = request.getProfileImage();
         // S3 업로드
-        String imageUrl = awsS3Service.uploadFile(file);
+        String imageUrl = awsS3Service.uploadFile(file, user);
 
         // User 엔티티에 프로필 정보 업데이트
         user.setNickname(request.getNickname());
@@ -28,7 +28,8 @@ public class UserService {
         user.setProfileImage(imageUrl);
 
         // 프로필 정보 업데이트 상태 바꾸기
-        user.setProfileCompleted(true);
+        if(!user.isProfileCompleted())
+            user.setProfileCompleted(true);
 
         userRepository.save(user);
     }
