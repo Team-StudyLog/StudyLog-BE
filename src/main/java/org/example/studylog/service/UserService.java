@@ -15,7 +15,7 @@ public class UserService {
     private final UserRepository userRepository;
     private final AwsS3Service awsS3Service;
 
-    public void updateUserProfile(ProfileRequestDTO request, String oauthId){
+    public ProfileResponseDTO updateUserProfile(ProfileRequestDTO request, String oauthId){
         // 유저 찾기
         User user = userRepository.findByOauthId(oauthId);
 
@@ -33,6 +33,13 @@ public class UserService {
             user.setProfileCompleted(true);
 
         userRepository.save(user);
+
+        // 수정된 데이터로 응답 객체 반환
+        return ProfileResponseDTO.builder()
+                .nickname(user.getNickname())
+                .intro(user.getIntro())
+                .profileImage(imageUrl)
+                .build();
     }
 
     public ProfileResponseDTO getUserProfile(String oauthId) {

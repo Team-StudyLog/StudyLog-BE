@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.example.studylog.dto.ProfileRequestDTO;
 import org.example.studylog.dto.ProfileResponseDTO;
 import org.example.studylog.service.UserService;
+import org.example.studylog.util.ResponseUtil;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -24,8 +25,8 @@ public class UserController {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         String oauthId = auth.getName();
 
-        userService.updateUserProfile(request, oauthId);
-        return ResponseEntity.ok("프로필 업데이트 완료");
+        ProfileResponseDTO dto = userService.updateUserProfile(request, oauthId);
+        return ResponseUtil.buildResponse(200, "사용자 프로필 업데이트 완료", dto);
     }
 
     @GetMapping("/profile")
@@ -35,7 +36,7 @@ public class UserController {
         String oauthId = auth.getName();
 
         ProfileResponseDTO dto = userService.getUserProfile(oauthId);
-        return ResponseEntity.ok(dto);
+        return ResponseUtil.buildResponse(200, "사용자 프로필 조회 성공", dto);
     }
 
 }
