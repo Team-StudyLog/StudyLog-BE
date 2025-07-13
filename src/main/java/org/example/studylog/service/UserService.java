@@ -2,6 +2,7 @@ package org.example.studylog.service;
 
 import lombok.RequiredArgsConstructor;
 import org.example.studylog.dto.ProfileRequestDTO;
+import org.example.studylog.dto.ProfileResponseDTO;
 import org.example.studylog.entity.user.User;
 import org.example.studylog.repository.UserRepository;
 import org.springframework.stereotype.Service;
@@ -32,5 +33,18 @@ public class UserService {
             user.setProfileCompleted(true);
 
         userRepository.save(user);
+    }
+
+    public ProfileResponseDTO getUserProfile(String oauthId) {
+        // 유저 찾기
+        User user = userRepository.findByOauthId(oauthId);
+
+        ProfileResponseDTO dto = ProfileResponseDTO.builder()
+                .nickname(user.getNickname())
+                .intro(user.getIntro())
+                .profileImage(user.getProfileImage())
+                .build();
+
+        return dto;
     }
 }
