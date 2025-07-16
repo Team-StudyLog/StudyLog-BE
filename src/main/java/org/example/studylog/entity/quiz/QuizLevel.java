@@ -1,4 +1,4 @@
-package org.example.studylog.entity;
+package org.example.studylog.entity.quiz;
 
 public enum QuizLevel {
     EASY,
