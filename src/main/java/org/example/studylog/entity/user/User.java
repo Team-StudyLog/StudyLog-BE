@@ -2,7 +2,12 @@ package org.example.studylog.entity.user;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.example.studylog.entity.StudyRecord;
+import org.example.studylog.entity.category.Category;
+import org.example.studylog.entity.quiz.Quiz;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 @Entity
@@ -47,4 +52,13 @@ public class User {
 
     @Column(nullable = false, unique = true)
     private String oauthId;
+
+    @OneToMany(mappedBy = "user")
+    private List<StudyRecord> records = new ArrayList<>();
+
+    @OneToMany(mappedBy = "user")
+    private List<Quiz> quizzes = new ArrayList<>();
+
+    @OneToMany(mappedBy = "user")
+    private List<Category> categories = new ArrayList<>();
 }
