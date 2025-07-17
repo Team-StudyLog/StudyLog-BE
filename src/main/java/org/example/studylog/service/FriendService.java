@@ -23,7 +23,7 @@ public class FriendService {
     public FriendNameDTO findUserByCode(String code) {
         // 코드로 사용자 조회
         User user = userRepository.findByCode(code)
-                .orElseThrow(() -> new UserNotFoundException("코드에 해당하는 사용자 없음"));
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_CODE_NOT_FOUND));
 
         return FriendNameDTO.builder()
                 .nickname(user.getNickname())
