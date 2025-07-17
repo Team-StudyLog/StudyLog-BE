@@ -1,10 +1,12 @@
 package org.example.studylog.exception.handler;
 
+import org.example.studylog.exception.BusinessException;
 import org.example.studylog.exception.TokenValidationException;
 import org.example.studylog.exception.UserNotFoundException;
 import org.example.studylog.util.ResponseUtil;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -14,7 +16,7 @@ import java.util.Map;
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(TokenValidationException.class)
-    public ResponseEntity<?> handlerTokenValidationException(TokenValidationException e){
+    public ResponseEntity<?> handlerTokenValidationException(TokenValidationException e) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(Map.of(
                         "statusCode", 400,
@@ -23,7 +25,19 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(UserNotFoundException.class)
-    public ResponseEntity<?> handleUserNotFoundException(UserNotFoundException e){
+    public ResponseEntity<?> handleUserNotFoundException(UserNotFoundException e) {
         return ResponseUtil.buildResponse(404, e.getMessage(), null);
     }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<?> handleMethodArgumentNotValidException(MethodArgumentNotValidException e) {
+        String message = e.getBindingResult().getFieldErrors().get(0).getDefaultMessage();
+        return ResponseUtil.buildResponse(400, message, null);
+    }
+
+    @ExceptionHandler(BusinessException.class)
+    public ResponseEntity<?> handleBusinessException(BusinessException e){
+        return ResponseUtil.buildResponse(e.getErrorCode().getStatus(), e.getErrorCode().getMessage(), null);
+    }
+
 }
