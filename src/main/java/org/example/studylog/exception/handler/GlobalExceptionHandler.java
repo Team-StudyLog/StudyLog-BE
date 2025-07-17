@@ -1,6 +1,8 @@
 package org.example.studylog.exception.handler;
 
 import org.example.studylog.exception.TokenValidationException;
+import org.example.studylog.exception.UserNotFoundException;
+import org.example.studylog.util.ResponseUtil;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -18,5 +20,10 @@ public class GlobalExceptionHandler {
                         "statusCode", 400,
                         "message", e.getMessage()
                 ));
+    }
+
+    @ExceptionHandler(UserNotFoundException.class)
+    public ResponseEntity<?> handleUserNotFoundException(UserNotFoundException e){
+        return ResponseUtil.buildResponse(404, e.getMessage(), null);
     }
 }
