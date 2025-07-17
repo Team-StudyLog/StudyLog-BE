@@ -1,5 +1,6 @@
 package org.example.studylog.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.studylog.dto.friend.FriendNameDTO;
@@ -19,6 +20,7 @@ public class FriendController {
 
     private final FriendService friendService;
 
+    @Operation(summary = "code로 친구 조회", description = "친구 추가 시, code로 친구 조회 API")
     @GetMapping(params = "code")
     public ResponseEntity<?> findUserByCode(@RequestParam String code) {
         FriendNameDTO dto = friendService.findUserByCode(code);
