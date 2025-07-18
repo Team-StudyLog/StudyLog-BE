@@ -8,6 +8,7 @@ public enum ErrorCode {
     ALREADY_FRIEND(400,"이미 친구입니다."),
     NOT_FRIEND(400, "친구 관계가 아닙니다."),
     FRIEND_NOT_FOUND(404, "해당하는 친구가 없습니다."),
+    SELF_LOOKUP_NOT_ALLOWED(400, "자기 자신은 조회할 수 없습니다."),
     ;
 
     private int status;
