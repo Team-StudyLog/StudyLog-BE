@@ -25,13 +25,17 @@ public class FriendService {
     private final FriendRepositoryImpl friendRepositoryImpl;
 
     @Transactional(readOnly = true)
-    public FriendNameDTO findUserByCode(String code) {
+    public FriendNameDTO findUserByCode(String oauthId, String code) {
         // 코드로 사용자 조회
-        User user = userRepository.findByCode(code)
+        User findUser = userRepository.findByCode(code)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_CODE_NOT_FOUND));
 
+        if(findUser.getOauthId().equals(oauthId)){
+            throw new BusinessException(ErrorCode.SELF_LOOKUP_NOT_ALLOWED);
+        }
+
         return FriendNameDTO.builder()
-                .nickname(user.getNickname())
+                .nickname(findUser.getNickname())
                 .build();
     }
 

@@ -27,7 +27,11 @@ public class FriendController {
     @Operation(summary = "code로 친구 조회", description = "친구 추가 시, code로 친구 조회 API")
     @GetMapping(params = "code")
     public ResponseEntity<?> findUserByCode(@RequestParam String code) {
-        FriendNameDTO dto = friendService.findUserByCode(code);
+        // 로그인한 사용자 oauthId 가져오기
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String oauthId = auth.getName();
+
+        FriendNameDTO dto = friendService.findUserByCode(oauthId, code);
         return ResponseUtil.buildResponse(200, "사용자 이름 조회 완료", dto);
     }
 
