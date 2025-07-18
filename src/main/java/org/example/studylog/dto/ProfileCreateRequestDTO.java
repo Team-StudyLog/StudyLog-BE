@@ -6,7 +6,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 @Getter
 @Setter
-public class ProfileRequestDTO {
+public class ProfileCreateRequestDTO {
     private MultipartFile profileImage;
     private String nickname;
     private String intro;

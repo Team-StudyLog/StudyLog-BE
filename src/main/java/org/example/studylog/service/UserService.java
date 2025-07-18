@@ -1,7 +1,7 @@
 package org.example.studylog.service;
 
 import lombok.RequiredArgsConstructor;
-import org.example.studylog.dto.ProfileRequestDTO;
+import org.example.studylog.dto.ProfileCreateRequestDTO;
 import org.example.studylog.dto.ProfileResponseDTO;
 import org.example.studylog.dto.UserInfoResponseDTO;
 import org.example.studylog.entity.user.User;
@@ -20,7 +20,7 @@ public class UserService {
     private final FriendRepository friendRepository;
 
     @Transactional
-    public ProfileResponseDTO createUserProfile(ProfileRequestDTO request, String oauthId){
+    public ProfileResponseDTO createUserProfile(ProfileCreateRequestDTO request, String oauthId){
         // 유저 찾기
         User user = userRepository.findByOauthId(oauthId);
 

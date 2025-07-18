@@ -6,9 +6,8 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.example.studylog.dto.ProfileRequestDTO;
+import org.example.studylog.dto.ProfileCreateRequestDTO;
 import org.example.studylog.dto.ProfileResponseDTO;
-import org.example.studylog.dto.ResponseDTO;
 import org.example.studylog.dto.UserInfoResponseDTO;
 import org.example.studylog.service.UserService;
 import org.example.studylog.util.ResponseUtil;
@@ -27,7 +26,7 @@ public class UserController {
 
     @Operation(summary = "프로필 업데이트 api", description = "프로필 추가 및 수정을 위한 api")
     @PostMapping("/profile")
-    public ResponseEntity<?> createProfile(@ModelAttribute ProfileRequestDTO request) {
+    public ResponseEntity<?> createProfile(@ModelAttribute ProfileCreateRequestDTO request) {
         // 로그인한 사용자 oauthId 가져오기
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         String oauthId = auth.getName();

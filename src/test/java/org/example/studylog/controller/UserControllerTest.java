@@ -2,7 +2,7 @@ package org.example.studylog.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.Cookie;
-import org.example.studylog.dto.ProfileRequestDTO;
+import org.example.studylog.dto.ProfileCreateRequestDTO;
 import org.example.studylog.dto.ProfileResponseDTO;
 import org.example.studylog.entity.user.User;
 import org.example.studylog.jwt.JWTUtil;
@@ -70,7 +70,7 @@ class UserControllerTest {
                 .profileImage("https://example.com/test.png")
                 .build();
 
-        when(userService.createUserProfile(any(ProfileRequestDTO.class), eq("abc1234")))
+        when(userService.createUserProfile(any(ProfileCreateRequestDTO.class), eq("abc1234")))
                 .thenReturn(dto);
 
         // access 토큰을 쿠키에 담아 요청
