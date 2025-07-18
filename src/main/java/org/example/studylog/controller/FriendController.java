@@ -42,6 +42,17 @@ public class FriendController {
         return ResponseUtil.buildResponse(200, "친구 목록 조회 완료", friends);
     }
 
+    @Operation(summary = "친구 검색", description = "친구 목록에서 이름으로 친구 조회 API")
+    @GetMapping("/search")
+    public ResponseEntity<?> getFriendByQuery(@RequestParam String query){
+        // 로그인한 사용자 oauthId 가져오기
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String oauthId = auth.getName();
+
+        List<FriendResponseDTO> friends = friendService.getFriendByQuery(oauthId, query);
+        return ResponseUtil.buildResponse(200, String.format("\'%s\'에 대한 친구 검색 완료", query), friends);
+    }
+
     @Operation(summary = "code로 친구 추가", description = "코드로 친구 추가 API")
     @PostMapping
     public ResponseEntity<?> addFriend(@RequestBody @Valid FriendRequestDTO request) {
@@ -52,5 +63,6 @@ public class FriendController {
         friendService.addFriend(request, oauthId);
         return ResponseUtil.buildResponse(201, "친구 추가 완료", null);
     }
+
 }
 

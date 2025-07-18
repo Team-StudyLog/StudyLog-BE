@@ -43,6 +43,14 @@ public class FriendService {
         return friendRepositoryImpl.findFriendListByUser(user);
     }
 
+    @Transactional(readOnly = true)
+    public List<FriendResponseDTO> getFriendByQuery(String oauthId, String query) {
+        // 로그인한 유저 찾기
+        User user = userRepository.findByOauthId(oauthId);
+
+        return friendRepositoryImpl.findFriendListByNickname(user, query);
+    }
+
     @Transactional
     public void addFriend(FriendRequestDTO request, String oauthId) {
         // 로그인한 유저 찾기
@@ -70,6 +78,5 @@ public class FriendService {
         friendRepository.save(toFriend);
         friendRepository.save(fromFriend);
     }
-
 
 }
