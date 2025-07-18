@@ -64,5 +64,16 @@ public class FriendController {
         return ResponseUtil.buildResponse(201, "친구 추가 완료", null);
     }
 
+    @Operation(summary = "친구 삭제", description = "friendId로 친구 삭제 API")
+    @DeleteMapping("/{friendId}")
+    public ResponseEntity<?> deleteFriend(@PathVariable Long friendId){
+        // 로그인한 사용자 oauthId 가져오기
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String oauthId = auth.getName();
+
+        FriendResponseDTO dto = friendService.deleteFriend(oauthId, friendId);
+        return ResponseUtil.buildResponse(200, "친구 삭제 완료", dto);
+    }
+
 }
 

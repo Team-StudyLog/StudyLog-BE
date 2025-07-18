@@ -79,4 +79,28 @@ public class FriendService {
         friendRepository.save(fromFriend);
     }
 
+    @Transactional
+    public FriendResponseDTO deleteFriend(String oauthId, Long friendId) {
+        // 로그인한 유저 찾기
+        User user = userRepository.findByOauthId(oauthId);
+        // 삭제할 친구 찾기
+        User friend = userRepository.findById(friendId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.FRIEND_NOT_FOUND));
+
+        // 친구 관계가 맞는지 확인
+        boolean alreadyAdded = friendRepository.existsByUserAndFriend(user, friend);
+        if(!alreadyAdded){
+            throw new BusinessException(ErrorCode.NOT_FRIEND);
+        }
+
+        Friend toFriend = friendRepository.findByUserAndFriend(user, friend)
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FRIEND));
+        Friend fromFriend = friendRepository.findByUserAndFriend(friend, user)
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FRIEND));
+
+        friendRepository.delete(toFriend);
+        friendRepository.delete(fromFriend);
+
+        return new FriendResponseDTO(friend.getId(), friend.getNickname(), friend.getProfileImage());
+    }
 }
