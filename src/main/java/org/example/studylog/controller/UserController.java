@@ -9,6 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.example.studylog.dto.ProfileRequestDTO;
 import org.example.studylog.dto.ProfileResponseDTO;
 import org.example.studylog.dto.ResponseDTO;
+import org.example.studylog.dto.UserInfoResponseDTO;
 import org.example.studylog.service.UserService;
 import org.example.studylog.util.ResponseUtil;
 import org.springframework.http.ResponseEntity;
@@ -47,5 +48,17 @@ public class UserController {
         ProfileResponseDTO dto = userService.getUserProfile(oauthId);
         return ResponseUtil.buildResponse(200, "사용자 프로필 조회 성공", dto);
     }
+
+    @Operation(summary = "로그인 유저의 마이페이지 조회 api")
+    @GetMapping
+    public ResponseEntity<?> getUserInfo(){
+        // 로그인한 사용자 oauthId 가져오기
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String oauthId = auth.getName();
+
+        UserInfoResponseDTO dto = userService.getUserInfo(oauthId);
+        return ResponseUtil.buildResponse(200, "사용자 정보 조회 성공", dto);
+    }
+
 
 }

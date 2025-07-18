@@ -3,9 +3,12 @@ package org.example.studylog.service;
 import lombok.RequiredArgsConstructor;
 import org.example.studylog.dto.ProfileRequestDTO;
 import org.example.studylog.dto.ProfileResponseDTO;
+import org.example.studylog.dto.UserInfoResponseDTO;
 import org.example.studylog.entity.user.User;
+import org.example.studylog.repository.FriendRepository;
 import org.example.studylog.repository.UserRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 @Service
@@ -14,7 +17,9 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final AwsS3Service awsS3Service;
+    private final FriendRepository friendRepository;
 
+    @Transactional
     public ProfileResponseDTO updateUserProfile(ProfileRequestDTO request, String oauthId){
         // 유저 찾기
         User user = userRepository.findByOauthId(oauthId);
@@ -42,6 +47,7 @@ public class UserService {
                 .build();
     }
 
+    @Transactional(readOnly = true)
     public ProfileResponseDTO getUserProfile(String oauthId) {
         // 유저 찾기
         User user = userRepository.findByOauthId(oauthId);
@@ -50,6 +56,23 @@ public class UserService {
                 .nickname(user.getNickname())
                 .intro(user.getIntro())
                 .profileImage(user.getProfileImage())
+                .build();
+
+        return dto;
+    }
+
+    @Transactional(readOnly = true)
+    public UserInfoResponseDTO getUserInfo(String oauthId) {
+        // 유저 찾기
+        User user = userRepository.findByOauthId(oauthId);
+
+        Long count = friendRepository.countByUser(user);
+        UserInfoResponseDTO dto = UserInfoResponseDTO.builder()
+                .profileImage(user.getProfileImage())
+                .nickname(user.getNickname())
+                .intro(user.getIntro())
+                .friendCount(count)
+                .code(user.getCode())
                 .build();
 
         return dto;
