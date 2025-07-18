@@ -30,4 +30,19 @@ public class FriendRepositoryImpl implements FriendRepositoryCustom{
                 .where(friend.user.eq(user))
                 .fetch();
     }
+
+    @Override
+    public List<FriendResponseDTO> findFriendListByNickname(User user, String query) {
+        QFriend friend = QFriend.friend1;
+
+        return queryFactory
+                .select(Projections.constructor(FriendResponseDTO.class,
+                        friend.friend.id,
+                        friend.friend.nickname,
+                        friend.friend.profileImage))
+                .from(friend)
+                .where(friend.user.eq(user),
+                        friend.friend.nickname.containsIgnoreCase(query))
+                .fetch();
+    }
 }

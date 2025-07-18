@@ -7,4 +7,5 @@ import java.util.List;
 
 public interface FriendRepositoryCustom {
     List<FriendResponseDTO> findFriendListByUser(User user);
+    List<FriendResponseDTO> findFriendListByNickname(User user, String query);
 }
