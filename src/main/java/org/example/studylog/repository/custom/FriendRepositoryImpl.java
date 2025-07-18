@@ -25,7 +25,8 @@ public class FriendRepositoryImpl implements FriendRepositoryCustom{
                 .select(Projections.constructor(FriendResponseDTO.class,
                         friend.friend.id,
                         friend.friend.nickname,
-                        friend.friend.profileImage))
+                        friend.friend.profileImage,
+                        friend.friend.code))
                 .from(friend)
                 .where(friend.user.eq(user))
                 .fetch();
@@ -39,7 +40,8 @@ public class FriendRepositoryImpl implements FriendRepositoryCustom{
                 .select(Projections.constructor(FriendResponseDTO.class,
                         friend.friend.id,
                         friend.friend.nickname,
-                        friend.friend.profileImage))
+                        friend.friend.profileImage,
+                        friend.friend.code))
                 .from(friend)
                 .where(friend.user.eq(user),
                         friend.friend.nickname.containsIgnoreCase(query))

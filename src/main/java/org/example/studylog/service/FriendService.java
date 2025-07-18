@@ -101,6 +101,6 @@ public class FriendService {
         friendRepository.delete(toFriend);
         friendRepository.delete(fromFriend);
 
-        return new FriendResponseDTO(friend.getId(), friend.getNickname(), friend.getProfileImage());
+        return new FriendResponseDTO(friend.getId(), friend.getNickname(), friend.getProfileImage(), friend.getCode());
     }
 }

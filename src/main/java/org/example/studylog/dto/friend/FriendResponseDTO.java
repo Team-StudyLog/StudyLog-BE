@@ -11,4 +11,5 @@ public class FriendResponseDTO {
     private Long id;
     private String nickname;
     private String profileImage;
+    private String code;
 }
