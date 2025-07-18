@@ -26,14 +26,14 @@ public class UserController {
     private final UserService userService;
 
     @Operation(summary = "프로필 업데이트 api", description = "프로필 추가 및 수정을 위한 api")
-    @PutMapping("/profile")
-    public ResponseEntity<?> updateProfile(@ModelAttribute ProfileRequestDTO request) {
+    @PostMapping("/profile")
+    public ResponseEntity<?> createProfile(@ModelAttribute ProfileRequestDTO request) {
         // 로그인한 사용자 oauthId 가져오기
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         String oauthId = auth.getName();
 
-        ProfileResponseDTO dto = userService.updateUserProfile(request, oauthId);
-        return ResponseUtil.buildResponse(200, "사용자 프로필 업데이트 완료", dto);
+        ProfileResponseDTO dto = userService.createUserProfile(request, oauthId);
+        return ResponseUtil.buildResponse(200, "사용자 프로필 생성 완료", dto);
     }
 
     @Operation(summary = "프로필 조회 api")

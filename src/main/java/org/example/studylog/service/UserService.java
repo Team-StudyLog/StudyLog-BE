@@ -20,7 +20,7 @@ public class UserService {
     private final FriendRepository friendRepository;
 
     @Transactional
-    public ProfileResponseDTO updateUserProfile(ProfileRequestDTO request, String oauthId){
+    public ProfileResponseDTO createUserProfile(ProfileRequestDTO request, String oauthId){
         // 유저 찾기
         User user = userRepository.findByOauthId(oauthId);
 

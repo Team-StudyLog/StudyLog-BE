@@ -70,7 +70,7 @@ class UserControllerTest {
                 .profileImage("https://example.com/test.png")
                 .build();
 
-        when(userService.updateUserProfile(any(ProfileRequestDTO.class), eq("abc1234")))
+        when(userService.createUserProfile(any(ProfileRequestDTO.class), eq("abc1234")))
                 .thenReturn(dto);
 
         // access 토큰을 쿠키에 담아 요청
