@@ -3,6 +3,7 @@ package org.example.studylog.service;
 import lombok.RequiredArgsConstructor;
 import org.example.studylog.dto.ProfileCreateRequestDTO;
 import org.example.studylog.dto.ProfileResponseDTO;
+import org.example.studylog.dto.ProfileUpdateRequestDTO;
 import org.example.studylog.dto.UserInfoResponseDTO;
 import org.example.studylog.entity.user.User;
 import org.example.studylog.repository.FriendRepository;
@@ -39,11 +40,42 @@ public class UserService {
 
         userRepository.save(user);
 
-        // 수정된 데이터로 응답 객체 반환
+        // 생성된 데이터로 응답 객체 반환
         return ProfileResponseDTO.builder()
                 .nickname(user.getNickname())
                 .intro(user.getIntro())
                 .profileImage(imageUrl)
+                .build();
+    }
+
+    @Transactional
+    public ProfileResponseDTO updateUserProfile(ProfileUpdateRequestDTO request, String oauthId) {
+        // 유저 찾기
+        User user = userRepository.findByOauthId(oauthId);
+
+        // 닉네임 수정
+        if(request.getNickname() != null){
+            user.setNickname(request.getNickname());
+        }
+
+        // 한줄 소개 수정
+        if(request.getIntro() != null){
+            user.setIntro(request.getIntro());
+        }
+
+        // 프로필 이미지 수정
+        if(request.getProfileImage() != null){
+            MultipartFile newImage = request.getProfileImage();
+            // S3 업로드
+            String imageUrl = awsS3Service.uploadFile(newImage, user);
+            user.setProfileImage(imageUrl);
+        }
+
+        // 수정된 데이터로 응답 객체 반환
+        return ProfileResponseDTO.builder()
+                .nickname(user.getNickname())
+                .intro(user.getIntro())
+                .profileImage(user.getProfileImage())
                 .build();
     }
 
@@ -77,4 +109,5 @@ public class UserService {
 
         return dto;
     }
+
 }

@@ -9,9 +9,11 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.studylog.dto.ProfileCreateRequestDTO;
 import org.example.studylog.dto.ProfileResponseDTO;
+import org.example.studylog.dto.ProfileUpdateRequestDTO;
 import org.example.studylog.dto.UserInfoResponseDTO;
 import org.example.studylog.service.UserService;
 import org.example.studylog.util.ResponseUtil;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -25,7 +27,7 @@ public class UserController {
 
     private final UserService userService;
 
-    @Operation(summary = "프로필 업데이트 api", description = "프로필 추가 및 수정을 위한 api")
+    @Operation(summary = "프로필 업데이트 api", description = "프로필 생성을 위한 api")
     @PostMapping("/profile")
     public ResponseEntity<?> createProfile(@Valid @ModelAttribute ProfileCreateRequestDTO request) {
         // 로그인한 사용자 oauthId 가져오기
@@ -34,6 +36,17 @@ public class UserController {
 
         ProfileResponseDTO dto = userService.createUserProfile(request, oauthId);
         return ResponseUtil.buildResponse(200, "사용자 프로필 생성 완료", dto);
+    }
+
+    @Operation(summary = "프로필 수정 api", description = "프로필 수정을 위한 api")
+    @PatchMapping(path = "/profile", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<?> updateProfile(@ModelAttribute ProfileUpdateRequestDTO request){
+        // 로그인한 사용자 oauthId 가져오기
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String oauthId = auth.getName();
+
+        ProfileResponseDTO dto = userService.updateUserProfile(request, oauthId);
+        return ResponseUtil.buildResponse(200, "사용자 프로필 수정 완료", dto);
     }
 
     @Operation(summary = "프로필 조회 api")
