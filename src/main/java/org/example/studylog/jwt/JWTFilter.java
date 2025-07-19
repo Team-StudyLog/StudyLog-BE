@@ -29,6 +29,11 @@ public class JWTFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
 
+        String requestURI = request.getRequestURI();
+        if (requestURI.equals("/auth/token-reissue")) {
+            filterChain.doFilter(request, response); // 토큰 검사 생략
+            return;
+        }
 
         //cookie들을 불러온 뒤 access Key에 담긴 쿠키를 찾음
         String accessToken = null;

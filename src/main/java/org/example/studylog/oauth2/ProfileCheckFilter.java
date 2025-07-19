@@ -34,9 +34,11 @@ public class ProfileCheckFilter extends OncePerRequestFilter {
             // 사용자의 회원 정보 입력 유무
             boolean isProfileCompleted = user.isProfileCompleted();
             String requestURI = request.getRequestURI();
+            String method = request.getMethod();
 
-            // /signup으로의 요청은 허용, 그 외는 막음
-            if(!isProfileCompleted && !requestURI.startsWith("/signup")) {
+            // /signup, /users/profile의 PUT 요청은 허용, 그 외는 막음
+            if(!isProfileCompleted && !requestURI.startsWith("/signup")&&
+                    !(requestURI.equals("/users/profile") && method.equalsIgnoreCase("PUT"))) {
                 response.sendRedirect("/signup");
                 return;
             }
