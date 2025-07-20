@@ -6,6 +6,7 @@ import org.example.studylog.exception.UserNotFoundException;
 import org.example.studylog.util.ResponseUtil;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -42,17 +43,13 @@ public class GlobalExceptionHandler {
         return ResponseUtil.buildResponse(e.getErrorCode().getStatus(), e.getErrorCode().getMessage(), null);
     }
 
-    @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<Map<String, Object>> handleValidationException(MethodArgumentNotValidException e) {
+    // 추가: body 없는 요청 처리
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<Map<String, Object>> handleHttpMessageNotReadableException(HttpMessageNotReadableException e) {
         Map<String, Object> response = new HashMap<>();
-
-        // 첫 번째 에러만 반환 - API 명세서 기반
-        FieldError firstError = e.getBindingResult().getFieldErrors().get(0);
-        String errorMessage = firstError.getDefaultMessage();
-
         response.put("statusCode", 400);
         response.put("message", "잘못된 접근입니다");
-        response.put("data", Map.of("example", errorMessage));
+        response.put("data", Map.of("example", "요청 본문이 필요합니다"));
 
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
     }

@@ -2,6 +2,7 @@ package org.example.studylog.config;
 
 import org.example.studylog.jwt.JWTFilter;
 import org.example.studylog.jwt.JWTUtil;
+import org.example.studylog.jwt.JwtAuthenticationEntryPoint;
 import org.example.studylog.oauth2.CustomFailureHandler;
 import org.example.studylog.oauth2.CustomSuccessHandler;
 import org.example.studylog.oauth2.ProfileCheckFilter;
@@ -26,13 +27,15 @@ public class SecurityConfig {
     private final CustomFailureHandler customFailureHandler;
     private final JWTUtil jwtUtil;
     private final UserRepository userRepository;
+    private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
 
-    public SecurityConfig(CustomOAuth2UserService customOAuth2UserService, CustomSuccessHandler customSuccessHandler, CustomFailureHandler customFailureHandler, JWTUtil jwtUtil, UserRepository userRepository) {
+    public SecurityConfig(CustomOAuth2UserService customOAuth2UserService, CustomSuccessHandler customSuccessHandler, CustomFailureHandler customFailureHandler, JWTUtil jwtUtil, UserRepository userRepository, JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint) {
         this.customOAuth2UserService = customOAuth2UserService;
         this.customSuccessHandler = customSuccessHandler;
         this.customFailureHandler = customFailureHandler;
         this.jwtUtil = jwtUtil;
         this.userRepository = userRepository;
+        this.jwtAuthenticationEntryPoint = jwtAuthenticationEntryPoint;
     }
 
     @Bean
@@ -49,6 +52,10 @@ public class SecurityConfig {
         // HTTP Basic 인증 방식 disable
         http
                 .httpBasic((auth) -> auth.disable());
+        // 커스텀 AuthenticationEntryPoint 설정
+        http
+                .exceptionHandling((exceptions) -> exceptions
+                        .authenticationEntryPoint(jwtAuthenticationEntryPoint));
 
         // JWTFilter 추가
         http
@@ -71,7 +78,7 @@ public class SecurityConfig {
         // 경로별 인가 작업
         http
                 .authorizeHttpRequests((auth) -> auth
-                        .requestMatchers("/", "/login", "/auth/**",
+                        .requestMatchers("/", "/login", "/auth/**", "/error",  // /error 추가
                                 "/swagger-ui/**",
                                 "/v3/api-docs/**",
                                 "/swagger-resources/**",
