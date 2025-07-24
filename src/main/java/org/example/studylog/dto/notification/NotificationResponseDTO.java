@@ -1,4 +1,4 @@
-package org.example.studylog.dto;
+package org.example.studylog.dto.notification;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
