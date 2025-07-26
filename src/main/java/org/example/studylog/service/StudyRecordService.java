@@ -13,11 +13,14 @@ import org.example.studylog.entity.user.User;
 import org.example.studylog.repository.CategoryRepository;
 import org.example.studylog.repository.StudyRecordRepository;
 import org.example.studylog.repository.StreakRepository;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -73,6 +76,8 @@ public class StudyRecordService {
         studyRecordRepository.delete(studyRecord);
         log.info("기록 삭제 완료: ID={}", recordId);
     }
+
+    @Transactional
     public CreateStudyRecordResponseDTO createStudyRecord(User user, CreateStudyRecordRequestDTO requestDTO) {
         log.info("사용자 {}의 기록 생성 시작", user.getOauthId());
 
@@ -126,6 +131,103 @@ public class StudyRecordService {
         return StudyRecordDetailResponseDTO.builder()
                 .record(recordDTO)
                 .quizzes(quizzes)
+                .build();
+    }
+
+    @Transactional(readOnly = true)
+    public StudyRecordFilterResponseDTO getStudyRecordsWithFilter(User user, StudyRecordFilterRequestDTO requestDTO) {
+        log.info("사용자 {}의 기록 필터링 조회: categoryId={}, date={}, lastId={}",
+                user.getOauthId(), requestDTO.getCategoryId(), requestDTO.getDate(), requestDTO.getLastId());
+
+        // 페이지 크기 설정 (최대 20개로 제한)
+        int pageSize = Math.min(requestDTO.getSize(), 20);
+        Pageable pageable = PageRequest.of(0, pageSize + 1); // +1로 hasMore 판단
+
+        List<StudyRecord> studyRecords;
+        Category category = null;
+        LocalDate filterDate = null;
+
+        // 카테고리 검증 (제공된 경우)
+        if (requestDTO.getCategoryId() != null) {
+            category = categoryRepository.findByIdAndUser(requestDTO.getCategoryId(), user)
+                    .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 카테고리입니다"));
+        }
+
+        // 날짜 파싱 (제공된 경우)
+        if (requestDTO.getDate() != null && !requestDTO.getDate().trim().isEmpty()) {
+            try {
+                filterDate = LocalDate.parse(requestDTO.getDate());
+            } catch (Exception e) {
+                throw new IllegalArgumentException("올바르지 않은 날짜 형식입니다. YYYY-MM-DD 형식으로 입력해주세요");
+            }
+        }
+
+        // 필터 조건에 따라 쿼리 실행
+        if (category != null && filterDate != null) {
+            // 카테고리 + 날짜 필터
+            studyRecords = studyRecordRepository.findByUserAndCategoryAndDateWithPagination(
+                    user, category, filterDate, requestDTO.getLastId(), pageable);
+        } else if (category != null) {
+            // 카테고리만 필터
+            studyRecords = studyRecordRepository.findByUserAndCategoryWithPagination(
+                    user, category, requestDTO.getLastId(), pageable);
+        } else if (filterDate != null) {
+            // 날짜만 필터
+            studyRecords = studyRecordRepository.findByUserAndDateWithPagination(
+                    user, filterDate, requestDTO.getLastId(), pageable);
+        } else {
+            // 필터 없음 (전체 조회)
+            studyRecords = studyRecordRepository.findByUserWithPagination(
+                    user, requestDTO.getLastId(), pageable);
+        }
+
+        // hasMore 판단 및 실제 반환할 데이터 추출
+        boolean hasMore = studyRecords.size() > pageSize;
+        List<StudyRecord> actualRecords = hasMore ?
+                studyRecords.subList(0, pageSize) : studyRecords;
+
+        // DTO 변환
+        List<StudyRecordDTO> recordDTOs = actualRecords.stream()
+                .map(this::convertToStudyRecordDTO)
+                .collect(Collectors.toList());
+
+        // 다음 lastId 계산
+        Long nextLastId = null;
+        if (hasMore && !actualRecords.isEmpty()) {
+            nextLastId = actualRecords.get(actualRecords.size() - 1).getId();
+        }
+
+        log.info("필터링 조회 결과: {}건, hasMore={}", recordDTOs.size(), hasMore);
+
+        return StudyRecordFilterResponseDTO.builder()
+                .records(recordDTOs)
+                .hasMore(hasMore)
+                .nextLastId(nextLastId)
+                .build();
+    }
+
+    @Transactional(readOnly = true)
+    public StudyRecordListResponseDTO searchStudyRecordsByTitle(User user, String query) {
+        log.info("사용자 {}의 기록 제목 검색: query={}", user.getOauthId(), query);
+
+        // 쿼리가 비어있는지 확인
+        if (query == null || query.trim().isEmpty()) {
+            throw new IllegalArgumentException("검색어는 공백일 수 없습니다");
+        }
+
+        // 제목으로 기록 검색
+        List<StudyRecord> studyRecords = studyRecordRepository
+                .findByUserAndTitleContainingIgnoreCaseOrderByCreateDateDesc(user, query.trim());
+
+        log.info("검색 결과: {}건", studyRecords.size());
+
+        // DTO로 변환
+        List<StudyRecordDTO> recordDTOs = studyRecords.stream()
+                .map(this::convertToStudyRecordDTO)
+                .collect(Collectors.toList());
+
+        return StudyRecordListResponseDTO.builder()
+                .records(recordDTOs)
                 .build();
     }
 

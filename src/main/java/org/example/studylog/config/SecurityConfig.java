@@ -2,7 +2,6 @@ package org.example.studylog.config;
 
 import org.example.studylog.jwt.JWTFilter;
 import org.example.studylog.jwt.JWTUtil;
-import org.example.studylog.jwt.JwtAuthenticationEntryPoint;
 import org.example.studylog.oauth2.CustomFailureHandler;
 import org.example.studylog.oauth2.CustomSuccessHandler;
 import org.example.studylog.oauth2.ProfileCheckFilter;
@@ -15,7 +14,6 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.oauth2.client.web.OAuth2LoginAuthenticationFilter;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 
 @Configuration
@@ -27,15 +25,13 @@ public class SecurityConfig {
     private final CustomFailureHandler customFailureHandler;
     private final JWTUtil jwtUtil;
     private final UserRepository userRepository;
-    private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
 
-    public SecurityConfig(CustomOAuth2UserService customOAuth2UserService, CustomSuccessHandler customSuccessHandler, CustomFailureHandler customFailureHandler, JWTUtil jwtUtil, UserRepository userRepository, JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint) {
+    public SecurityConfig(CustomOAuth2UserService customOAuth2UserService, CustomSuccessHandler customSuccessHandler, CustomFailureHandler customFailureHandler, JWTUtil jwtUtil, UserRepository userRepository) {
         this.customOAuth2UserService = customOAuth2UserService;
         this.customSuccessHandler = customSuccessHandler;
         this.customFailureHandler = customFailureHandler;
         this.jwtUtil = jwtUtil;
         this.userRepository = userRepository;
-        this.jwtAuthenticationEntryPoint = jwtAuthenticationEntryPoint;
     }
 
     @Bean
@@ -52,10 +48,7 @@ public class SecurityConfig {
         // HTTP Basic 인증 방식 disable
         http
                 .httpBasic((auth) -> auth.disable());
-        // 커스텀 AuthenticationEntryPoint 설정
-        http
-                .exceptionHandling((exceptions) -> exceptions
-                        .authenticationEntryPoint(jwtAuthenticationEntryPoint));
+
 
         // JWTFilter 추가
         http
