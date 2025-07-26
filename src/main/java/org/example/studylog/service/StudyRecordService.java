@@ -113,8 +113,8 @@ public class StudyRecordService {
     public StudyRecordDetailResponseDTO getStudyRecordDetail(User user, Long recordId) {
         log.info("사용자 {}의 기록 상세 조회: recordId={}", user.getOauthId(), recordId);
 
-        // 기록 조회 및 권한 확인
-        StudyRecord studyRecord = studyRecordRepository.findById(recordId)
+        // N+1 방지: JOIN FETCH로 카테고리와 퀴즈 정보까지 한 번에 조회
+        StudyRecord studyRecord = studyRecordRepository.findByIdWithCategoryAndQuizzes(recordId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 기록입니다"));
 
         // 작성자 확인
