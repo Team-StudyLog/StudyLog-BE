@@ -48,4 +48,22 @@ public class QuizController {
             return ResponseUtil.buildResponse(500, "내부 서버 오류입니다", null);
         }
     }
+
+    @GetMapping("/{quizId}")
+    public ResponseEntity<?> getQuiz(@AuthenticationPrincipal CustomOAuth2User currentUser,
+                                     @PathVariable Long quizId){
+        try {
+            log.info("퀴즈 상세 조회: 사용자={}, 퀴즈ID={}", currentUser.getName(), quizId);
+
+            QuizResponseDTO dto = quizService.getQuiz(currentUser.getName(), quizId);
+
+            return ResponseUtil.buildResponse(200, "퀴즈 상세 조회 완료", dto);
+        } catch (IllegalArgumentException e){
+            log.warn("퀴즈 상세 조회 실패 - 잘못된 요청: {}", e.getMessage());
+            return ResponseUtil.buildResponse(400, e.getMessage(), null);
+        } catch (Exception e) {
+            log.error("퀴즈 생성 중 오류 발생", e);
+            return ResponseUtil.buildResponse(500, "내부 서버 오류입니다", null);
+        }
+    }
 }

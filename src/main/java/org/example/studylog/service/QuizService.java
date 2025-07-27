@@ -99,18 +99,7 @@ public class QuizService {
 
         // 응답 데이터 생성
         List<QuizResponseDTO> quizResponseList = quizzes.stream().map(map -> {
-            QuizResponseDTO dto = new QuizResponseDTO();
-            dto.setCreatedAt(map.getCreatedAt().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")));
-            dto.setType(String.valueOf(map.getType()));
-            dto.setCategory(CategoryDTO.builder()
-                    .id(category.getId())
-                    .name(category.getName())
-                    .color(String.valueOf(category.getColor()))
-                    .build());
-            dto.setQuestion(map.getQuestion());
-            dto.setAnswer(map.getAnswer());
-            dto.setLevel(map.getLevel().getLabel());
-            dto.setRecordId(map.getRecord().getId());
+            QuizResponseDTO dto = QuizResponseDTO.from(map, category);
             return dto;
         }).toList();
 
@@ -169,5 +158,27 @@ public class QuizService {
                 dto.getQuizCount(),
                 dto.getRequirement() != null ? "- 참고사항: " + dto.getRequirement() : ""
         );
+    }
+
+    @Transactional(readOnly = true)
+    public QuizResponseDTO getQuiz(String oauthId, Long quizId) {
+        // 유저 조회
+        User user = userRepository.findByOauthId(oauthId);
+
+        // 퀴즈 조회
+        Quiz quiz = quizRepository.findById(quizId)
+                .orElseThrow(() -> new IllegalArgumentException("퀴즈가 존재하지 않습니다."));
+
+        // 해당 퀴즈가 로그인한 사용자의 것인지 확인
+        if(user != quiz.getUser())
+            throw new IllegalArgumentException("현재 유저의 퀴즈가 아닙니다.");
+
+        // 퀴즈의 카테고리 가져오기
+        Category category = quiz.getCategory();
+
+        // 응답 데이터 생성
+        QuizResponseDTO dto = QuizResponseDTO.from(quiz, category);
+
+        return dto;
     }
 }
