@@ -1,5 +1,6 @@
 package org.example.studylog.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -25,6 +26,7 @@ public class QuizController {
 
     private final QuizService quizService;
 
+    @Operation(summary = "퀴즈 생성", description = "recordId로 친구 생성 API")
     @PostMapping("/{recordId}")
     public ResponseEntity<?> createQuiz(
             @AuthenticationPrincipal CustomOAuth2User currentUser,
@@ -49,6 +51,7 @@ public class QuizController {
         }
     }
 
+    @Operation(summary = "퀴즈 상세 조회", description = "quizId로 퀴즈 상세 조회 API")
     @GetMapping("/{quizId}")
     public ResponseEntity<?> getQuiz(@AuthenticationPrincipal CustomOAuth2User currentUser,
                                      @PathVariable Long quizId){
