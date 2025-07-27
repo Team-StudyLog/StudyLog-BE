@@ -1,10 +1,12 @@
 package org.example.studylog.service;
 
 import lombok.RequiredArgsConstructor;
+import org.example.studylog.dto.notification.NotificationDTO;
 import org.example.studylog.dto.friend.FriendNameDTO;
 import org.example.studylog.dto.friend.FriendRequestDTO;
 import org.example.studylog.dto.friend.FriendResponseDTO;
 import org.example.studylog.entity.Friend;
+import org.example.studylog.entity.notification.NotificationType;
 import org.example.studylog.entity.user.User;
 import org.example.studylog.exception.BusinessException;
 import org.example.studylog.exception.ErrorCode;
@@ -23,6 +25,7 @@ public class FriendService {
     private final UserRepository userRepository;
     private final FriendRepository friendRepository;
     private final FriendRepositoryImpl friendRepositoryImpl;
+    private final NotificationService notificationService;
 
     @Transactional(readOnly = true)
     public FriendNameDTO findUserByCode(String oauthId, String code) {
@@ -81,6 +84,13 @@ public class FriendService {
 
         friendRepository.save(toFriend);
         friendRepository.save(fromFriend);
+
+        // 상대에게 친구 추가 알림 보내기
+        notificationService.sendToClient(friend.getOauthId(),
+                NotificationDTO.builder()
+                        .content(user.getNickname() + "님이 친구 추가를 하셨습니다.")
+                        .type(NotificationType.ADD_FRIEND)
+                        .build());
     }
 
     @Transactional
@@ -104,6 +114,13 @@ public class FriendService {
 
         friendRepository.delete(toFriend);
         friendRepository.delete(fromFriend);
+
+        // 상대에게 친구 삭제 알림 보내기
+        notificationService.sendToClient(friend.getOauthId(),
+                NotificationDTO.builder()
+                        .content(user.getNickname() + "님이 친구 삭제를 하셨습니다.")
+                        .type(NotificationType.DELETE_FRIEND)
+                        .build());
 
         return new FriendResponseDTO(friend.getId(), friend.getNickname(), friend.getProfileImage(), friend.getCode());
     }
