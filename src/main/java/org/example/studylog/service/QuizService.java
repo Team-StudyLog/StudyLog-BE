@@ -3,7 +3,6 @@ package org.example.studylog.service;
 import com.fasterxml.jackson.core.type.TypeReference;
 import lombok.RequiredArgsConstructor;
 import org.example.studylog.client.ChatGptClient;
-import org.example.studylog.dto.CategoryDTO;
 import org.example.studylog.dto.quiz.CreateQuizRequestDTO;
 import org.example.studylog.dto.quiz.QuizResponseDTO;
 import org.example.studylog.dto.quiz.chatGPT.ChatGptRequest;
@@ -23,7 +22,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
 
