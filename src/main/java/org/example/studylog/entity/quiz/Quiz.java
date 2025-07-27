@@ -11,6 +11,8 @@ import org.example.studylog.entity.StudyRecord;
 import org.example.studylog.entity.category.Category;
 import org.example.studylog.entity.user.User;
 
+import java.time.LocalDateTime;
+
 @Getter
 @Setter
 @SuperBuilder
@@ -36,6 +38,9 @@ public class Quiz extends BaseEntity {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private QuizType type;
+
+    @Column(nullable = false)
+    private LocalDateTime createdAt;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "record_id", nullable = false)
