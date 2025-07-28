@@ -34,7 +34,7 @@ public class QuizResponseDTO {
                         .build())
                 .question(quiz.getQuestion())
                 .answer(quiz.getAnswer())
-                .level(quiz.getLevel().getLabel())
+                .level(String.valueOf(quiz.getLevel()))
                 .recordId(quiz.getRecord().getId())
                 .build();
     }
