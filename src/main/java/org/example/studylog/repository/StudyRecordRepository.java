@@ -92,7 +92,7 @@ public interface StudyRecordRepository extends JpaRepository<StudyRecord, Long> 
     @Query("SELECT sr FROM StudyRecord sr WHERE sr.user = :user AND DATE(sr.createDate) = :date")
     List<StudyRecord> findByUserAndCreateDateDate(@Param("user") User user, @Param("date") LocalDate date);
 
-    // 메인페이지 기능에의해 새로 추가: 카테고리별 기록 개수 조회 (N+1 쿼리 해결용)
+    // ✅ 새로 추가: 카테고리별 기록 개수 조회 (N+1 쿼리 해결용)
     @Query("SELECT sr.category.id, COUNT(sr) FROM StudyRecord sr " +
             "WHERE sr.user = :user " +
             "GROUP BY sr.category.id")

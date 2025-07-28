@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.example.studylog.dto.MainPageResponseDTO;
 import org.example.studylog.dto.friend.FriendResponseDTO;
 import org.example.studylog.entity.Streak;
+import org.example.studylog.entity.category.Category;
 import org.example.studylog.entity.user.User;
 import org.example.studylog.repository.CategoryRepository;
 import org.example.studylog.repository.StreakRepository;
@@ -18,6 +19,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -95,16 +97,23 @@ public class MainService {
     }
 
     private List<MainPageResponseDTO.CategoryCountDTO> getCategoryCountData(User user) {
-        // 실제 카테고리별 기록 수를 계산
-        return categoryRepository.findByUserOrderByNameAsc(user).stream()
-                .map(category -> {
-                    // 각 카테고리별 StudyRecord 개수 계산
-                    long recordCount = category.getRecords().size();
-                    return MainPageResponseDTO.CategoryCountDTO.builder()
-                            .name(category.getName())
-                            .count((int) recordCount)
-                            .build();
-                })
+        // N+1 쿼리 해결: 한 번의 쿼리로 카테고리별 기록 수 조회
+        List<Object[]> categoryCountResults = studyRecordRepository.findCategoryCountsByUser(user);
+
+        Map<Long, Integer> categoryCountMap = categoryCountResults.stream()
+                .collect(Collectors.toMap(
+                        result -> (Long) result[0],     // categoryId
+                        result -> ((Long) result[1]).intValue()  // count
+                ));
+
+        // 카테고리 정보 조회
+        List<Category> categories = categoryRepository.findByUserOrderByNameAsc(user);
+
+        return categories.stream()
+                .map(category -> MainPageResponseDTO.CategoryCountDTO.builder()
+                        .name(category.getName())
+                        .count(categoryCountMap.getOrDefault(category.getId(), 0))
+                        .build())
                 .toList();
     }
 }
