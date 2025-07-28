@@ -3,8 +3,11 @@ package org.example.studylog.service;
 import com.fasterxml.jackson.core.type.TypeReference;
 import lombok.RequiredArgsConstructor;
 import org.example.studylog.client.ChatGptClient;
+import org.example.studylog.dto.CategoryDTO;
 import org.example.studylog.dto.quiz.CreateQuizRequestDTO;
+import org.example.studylog.dto.quiz.QuizListResponseDTO;
 import org.example.studylog.dto.quiz.QuizResponseDTO;
+import org.example.studylog.dto.quiz.QuizSummaryDTO;
 import org.example.studylog.dto.quiz.chatGPT.ChatGptRequest;
 import org.example.studylog.dto.quiz.chatGPT.ChatGptResponse;
 import org.example.studylog.entity.StudyRecord;
@@ -15,6 +18,7 @@ import org.example.studylog.entity.quiz.QuizType;
 import org.example.studylog.entity.user.User;
 import org.example.studylog.exception.BusinessException;
 import org.example.studylog.exception.ErrorCode;
+import org.example.studylog.repository.CategoryRepository;
 import org.example.studylog.repository.QuizRepository;
 import org.example.studylog.repository.StudyRecordRepository;
 import org.example.studylog.repository.UserRepository;
@@ -22,6 +26,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 
@@ -32,6 +37,7 @@ public class QuizService {
     private final StudyRecordRepository studyRecordRepository;
     private final UserRepository userRepository;
     private final QuizRepository quizRepository;
+    private final CategoryRepository categoryRepository;
 
     private final ChatGptClient chatGptClient;
     private final ObjectMapper objectMapper;
@@ -178,5 +184,28 @@ public class QuizService {
         QuizResponseDTO dto = QuizResponseDTO.from(quiz, category);
 
         return dto;
+    }
+
+    @Transactional(readOnly = true)
+    public QuizListResponseDTO getQuizList(String oauthId, String query, Long lastId, int size, LocalDate date, Long categoryId) {
+        // 로그인한 유저 조회
+        User user = userRepository.findByOauthId(oauthId);
+
+        // 조건에 맞는 퀴즈 목록 조회
+        List<Quiz> quizzes = quizRepository.findQuizzes(user.getId(), lastId, size + 1, date, categoryId, query);
+
+        // 유저의 카테고리 조회
+        List<Category> categories = categoryRepository.findByUserOrderByNameAsc(user);
+
+        // 다음 데이터 존재 여부
+        boolean hasNext = quizzes.size() > size;
+        if (hasNext) quizzes.remove(size);   // 커서 확인용으로만 사용한 마지막 1개 제거
+
+        return QuizListResponseDTO.builder()
+                .categories(categories.stream().map(CategoryDTO::from).toList())
+                .quizzes(quizzes.stream().map(QuizSummaryDTO::from).toList())
+                .hasNext(hasNext)
+                .lastId(quizzes.isEmpty() ? null : quizzes.get(quizzes.size()-1).getId())
+                .build();
     }
 }
