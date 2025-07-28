@@ -82,7 +82,7 @@ public class NotificationService {
         }
     }
 
-    @Transactional(readOnly = true)
+    @Transactional
     public List<NotificationListResponseDTO> getNotificationList(String oauthId) {
         User user = userRepository.findByOauthId(oauthId);
         List<Notification> notifications = notificationRepository.findTop30ByUserOrderByCreatedAtDesc(user);
@@ -90,6 +90,11 @@ public class NotificationService {
         List<NotificationListResponseDTO> list = notifications.stream()
                 .map(NotificationListResponseDTO::from)
                 .collect(Collectors.toList());
+
+        // 알림 조회 여부를 true로 변경
+        for(Notification n : notifications){
+            if(n.isRead() == false) n.setRead(true);
+        }
 
         return list;
     }
