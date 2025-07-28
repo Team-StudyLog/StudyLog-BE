@@ -21,7 +21,7 @@ public class QuizSummaryDTO {
                 .category(quiz.getCategory().getName())
                 .color(String.valueOf(quiz.getCategory().getColor()))
                 .question(quiz.getQuestion())
-                .level(quiz.getLevel().getLabel())
+                .level(String.valueOf(quiz.getLevel()))
                 .build();
     }
 }
