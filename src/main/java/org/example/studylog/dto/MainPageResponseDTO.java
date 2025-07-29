@@ -39,7 +39,7 @@ public class MainPageResponseDTO {
     @AllArgsConstructor
     public static class StreakDTO {
         private Integer maxStreak;
-        private Map<String, Integer> currentStreak; // "2024-04-01": 2 형태
+        private Map<String, Integer> recordCountPerDay; // currentStreak → recordCountPerDay로 변경
     }
 
     @Getter

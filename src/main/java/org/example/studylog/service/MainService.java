@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.List;
@@ -40,7 +41,7 @@ public class MainService {
 
         // 2. 프로필 정보 생성
         MainPageResponseDTO.ProfileDTO profile = MainPageResponseDTO.ProfileDTO.builder()
-                .coverImage(user.getBackImage() != null ? user.getBackImage() : "https://example.com/bg.jpg") // 실제 backImage 사용
+                .coverImage(user.getBackImage() != null ? user.getBackImage() : "https://example.com/bg.jpg")
                 .profileImage(user.getProfileImage())
                 .name(user.getNickname())
                 .intro(user.getIntro())
@@ -48,12 +49,12 @@ public class MainService {
                 .uuid(user.getUuid().toString())
                 .build();
 
-        // 3. 스트릭 정보 생성 (실제 데이터 활용)
-        Map<String, Integer> currentStreak = getCurrentStreakData(user);
+        // 3. 스트릭 정보 생성 (현재 월 데이터 활용)
+        Map<String, Integer> recordCountPerDay = getCurrentStreakData(user);
         Integer maxStreak = getMaxStreak(user);
         MainPageResponseDTO.StreakDTO streak = MainPageResponseDTO.StreakDTO.builder()
                 .maxStreak(maxStreak)
-                .currentStreak(currentStreak)
+                .recordCountPerDay(recordCountPerDay)
                 .build();
 
         // 4. 카테고리별 기록 수 조회 (실제 데이터)
@@ -74,12 +75,15 @@ public class MainService {
 
     private Map<String, Integer> getCurrentStreakData(User user) {
         Map<String, Integer> streakData = new HashMap<>();
-        LocalDate today = LocalDate.now();
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
-        // 최근 30일간의 기록 수를 조회
-        for (int i = 0; i < 30; i++) {
-            LocalDate date = today.minusDays(i);
+        // 현재 월의 모든 날짜에 대해 기록 수 조회
+        LocalDate today = LocalDate.now();
+        YearMonth currentMonth = YearMonth.from(today);
+        int daysInMonth = currentMonth.lengthOfMonth();
+
+        for (int day = 1; day <= daysInMonth; day++) {
+            LocalDate date = LocalDate.of(currentMonth.getYear(), currentMonth.getMonth(), day);
             Long recordCount = studyRecordRepository.countByUserAndCreateDateDate(user, date);
 
             if (recordCount > 0) {
