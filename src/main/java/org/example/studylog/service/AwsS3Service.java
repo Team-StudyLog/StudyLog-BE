@@ -25,18 +25,28 @@ public class AwsS3Service {
     private String bucket;
     private final S3Template s3Template;
 
-    public String uploadFile(MultipartFile file, User user){
-        try{
-            // 프로필 업데이트한 유저면 프로필 이미지 URL에서 객체 키값 추출 후 삭제
-            if(user.isProfileCompleted()){
-                deleteFileByKey(user.getProfileImage());
-            }
+    public String uploadProfileImage(MultipartFile file, User user){
+        // 프로필 업데이트한 유저면 프로필 이미지 URL에서 객체 키값 추출 후 삭제
+        if(user.isProfileCompleted()){
+            deleteFileByKey(user.getProfileImage());
+        }
 
+        return uploadToS3(file);
+    }
+
+    public String uploadBackImage(MultipartFile file, User user){
+        // user의 backImage가 null이 아니면 버킷에 있는 기존 이미지 삭제
+        if(user.getBackImage() != null){
+            deleteFileByKey(user.getBackImage());
+        }
+
+        return uploadToS3(file);
+    }
+
+    private String uploadToS3(MultipartFile file){
+        try (InputStream stream = file.getInputStream()){
             // 파일 이름 고유하게 하기 위해 UUID 사용
             String fileName = UUID.randomUUID() + "-" + file.getOriginalFilename();
-
-            // 파일 내용을 스트림 형태로 추출
-            InputStream stream = file.getInputStream();
 
             // 파일의 부가 정보 담는 객체 (파일 타입)
             ObjectMetadata metadata = ObjectMetadata.builder().contentType(file.getContentType()).build();
@@ -45,6 +55,7 @@ public class AwsS3Service {
             S3Resource s3resource = s3Template.upload(bucket, fileName, stream, metadata);
 
             return String.valueOf(s3resource.getURL());
+
         } catch (Exception e){
             throw new RuntimeException("S3 업로드 실패", e);
         }

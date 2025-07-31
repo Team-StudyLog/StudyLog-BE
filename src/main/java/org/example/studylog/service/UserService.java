@@ -1,17 +1,18 @@
 package org.example.studylog.service;
 
 import lombok.RequiredArgsConstructor;
-import org.example.studylog.dto.ProfileCreateRequestDTO;
-import org.example.studylog.dto.ProfileResponseDTO;
-import org.example.studylog.dto.ProfileUpdateRequestDTO;
-import org.example.studylog.dto.UserInfoResponseDTO;
+import lombok.extern.slf4j.Slf4j;
+import org.example.studylog.dto.*;
 import org.example.studylog.entity.user.User;
+import org.example.studylog.exception.UserNotFoundException;
 import org.example.studylog.repository.FriendRepository;
 import org.example.studylog.repository.UserRepository;
+import org.example.studylog.util.ResponseUtil;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class UserService {
@@ -27,7 +28,7 @@ public class UserService {
 
         MultipartFile file = request.getProfileImage();
         // S3 업로드
-        String imageUrl = awsS3Service.uploadFile(file, user);
+        String imageUrl = awsS3Service.uploadProfileImage(file, user);
 
         // User 엔티티에 프로필 정보 업데이트
         user.setNickname(request.getNickname());
@@ -67,7 +68,7 @@ public class UserService {
         if(request.getProfileImage() != null){
             MultipartFile newImage = request.getProfileImage();
             // S3 업로드
-            String imageUrl = awsS3Service.uploadFile(newImage, user);
+            String imageUrl = awsS3Service.uploadProfileImage(newImage, user);
             user.setProfileImage(imageUrl);
         }
 
@@ -110,4 +111,27 @@ public class UserService {
         return dto;
     }
 
+    @Transactional
+    public BackgroundDTO.ResponseDTO updateBackground(String oauthId, BackgroundDTO.RequestDTO dto) {
+        // 유저 찾기
+        User user = userRepository.findByOauthId(oauthId);
+
+        log.info("배경화면 수정 시작: 사용자={}", oauthId);
+
+        MultipartFile file = dto.getCoverImage();
+        if(file.isEmpty()){
+            throw new IllegalStateException("빈 파일은 업로드할 수 없습니다.");
+        }
+
+        // 이미지 URL을 DB에 저장
+        String backImageUrl = awsS3Service.uploadBackImage(file, user);
+        user.setBackImage(backImageUrl);
+
+        // 응답 생성
+        BackgroundDTO.ResponseDTO responseDTO = new BackgroundDTO.ResponseDTO(backImageUrl);
+
+        log.info("배경화면 수정 완료: 사용자={}, 배경화면 url = {}", oauthId, backImageUrl);
+
+        return responseDTO;
+    }
 }
