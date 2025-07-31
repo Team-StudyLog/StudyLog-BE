@@ -12,11 +12,12 @@ public class LoginController {
         return "index.html";
     }
 
-    @GetMapping("/main")
-    @ResponseBody
-    public String main() {
-        return "메인 페이지";
-    }
+    // 메인 페이지 구현에 따라 주석 처리 - 채민
+//    @GetMapping("/main")
+//    @ResponseBody
+//    public String main() {
+//        return "메인 페이지";
+//    }
 
     @GetMapping("/success")
     @ResponseBody
