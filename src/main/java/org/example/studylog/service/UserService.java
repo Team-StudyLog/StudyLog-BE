@@ -28,7 +28,7 @@ public class UserService {
 
         MultipartFile file = request.getProfileImage();
         // S3 업로드
-        String imageUrl = awsS3Service.uploadFile(file, user);
+        String imageUrl = awsS3Service.uploadProfileImage(file, user);
 
         // User 엔티티에 프로필 정보 업데이트
         user.setNickname(request.getNickname());
@@ -68,7 +68,7 @@ public class UserService {
         if(request.getProfileImage() != null){
             MultipartFile newImage = request.getProfileImage();
             // S3 업로드
-            String imageUrl = awsS3Service.uploadFile(newImage, user);
+            String imageUrl = awsS3Service.uploadProfileImage(newImage, user);
             user.setProfileImage(imageUrl);
         }
 
