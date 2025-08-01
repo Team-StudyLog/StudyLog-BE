@@ -67,16 +67,6 @@ public class User {
     @OneToMany(mappedBy = "user")
     private List<Category> categories = new ArrayList<>();
 
-    // 레벨 증가
-    public void levelUp() {
-        this.level++;
-    }
-
-    // 레벨 감소
-    public void levelDown() {
-        this.level--;
-    }
-
     // 기록 수 증가
     public void incrementRecordCount(){
         this.recordCount++;
