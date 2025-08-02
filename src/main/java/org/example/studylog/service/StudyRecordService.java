@@ -113,6 +113,7 @@ public class StudyRecordService {
         log.info("기록 생성 이벤트 발행: USER={}, ID={}", user.getOauthId(), savedStudyRecord.getId());
         user.incrementRecordCount();
         eventPublisher.publishEvent(new RecordEvent(user));
+        log.info("기록 생성 이벤트 종료: USER={}, ID={}", user.getOauthId(), savedStudyRecord.getId());
 
         // 4. 응답 DTO 생성
         StudyRecordDTO recordDTO = convertToStudyRecordDTO(savedStudyRecord);

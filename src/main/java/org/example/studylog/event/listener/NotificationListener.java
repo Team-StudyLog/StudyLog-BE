@@ -8,10 +8,9 @@ import org.example.studylog.entity.user.User;
 import org.example.studylog.event.LevelEvent;
 import org.example.studylog.service.NotificationService;
 import org.springframework.context.event.EventListener;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.transaction.event.TransactionPhase;
-import org.springframework.transaction.event.TransactionalEventListener;
 
 @Slf4j
 @Component
@@ -20,6 +19,7 @@ public class NotificationListener {
 
     private final NotificationService notificationService;
 
+    @Async
     @EventListener
     @Transactional
     public void handleLevelChange(LevelEvent event){
