@@ -5,6 +5,7 @@ import lombok.*;
 import org.example.studylog.entity.StudyRecord;
 import org.example.studylog.entity.category.Category;
 import org.example.studylog.entity.quiz.Quiz;
+import org.hibernate.annotations.ColumnDefault;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -37,6 +38,10 @@ public class User {
     @Column(nullable = false)
     private int level;
 
+    @Column(nullable = false)
+    @ColumnDefault("0")
+    private Long recordCount;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Role role;
@@ -61,4 +66,14 @@ public class User {
 
     @OneToMany(mappedBy = "user")
     private List<Category> categories = new ArrayList<>();
+
+    // 기록 수 증가
+    public void incrementRecordCount(){
+        this.recordCount++;
+    }
+
+    // 기록 수 감소
+    public void decrementRecordCount(){
+        this.recordCount--;
+    }
 }
