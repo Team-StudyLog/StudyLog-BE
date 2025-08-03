@@ -10,6 +10,7 @@ import org.example.studylog.entity.user.User;
 import org.example.studylog.repository.CategoryRepository;
 import org.example.studylog.repository.StreakRepository;
 import org.example.studylog.repository.StudyRecordRepository;
+import org.example.studylog.repository.UserRepository;
 import org.example.studylog.repository.custom.FriendRepositoryImpl;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -31,6 +32,7 @@ public class MainService {
     private final StudyRecordRepository studyRecordRepository;
     private final StreakRepository streakRepository;
     private final CategoryRepository categoryRepository;
+    private final UserRepository userRepository;
 
     @Transactional(readOnly = true)
     public MainPageResponseDTO getMainPageData(User user) {
@@ -119,5 +121,24 @@ public class MainService {
                         .count(categoryCountMap.getOrDefault(category.getId(), 0))
                         .build())
                 .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public MainPageResponseDTO getMainPageDataByCode(String code) {
+        log.info("코드로 메인 페이지 데이터 조회 시작: code={}", code);
+
+        // code로 사용자 조회
+        User user = userRepository.findByCode(code)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 사용자 코드입니다."));
+
+        log.info("코드로 사용자 조회 완료: code={}, 사용자={}", code, user.getOauthId());
+
+        // 기존 getMainPageData 메서드 로직 재사용
+        MainPageResponseDTO response = getMainPageData(user);
+
+        log.info("코드로 메인 페이지 데이터 조회 완료: code={}, 친구수={}, 카테고리수={}",
+                code, response.getFollowing().size(), response.getCategories().size());
+
+        return response;
     }
 }
