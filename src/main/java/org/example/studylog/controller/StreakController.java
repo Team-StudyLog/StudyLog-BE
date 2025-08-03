@@ -10,6 +10,7 @@ import org.example.studylog.util.ResponseUtil;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -56,6 +57,42 @@ public class StreakController {
 
         } catch (Exception e) {
             log.error("월별 스트릭 조회 중 오류 발생", e);
+            return ResponseUtil.buildResponse(500, "내부 서버 오류입니다. 다시 접속해주세요.", null);
+        }
+    }
+
+    @GetMapping("/streak/{code}")
+    public ResponseEntity<?> getMonthlyStreakByCode(
+            @PathVariable String code,
+            @RequestParam("year") String year,
+            @RequestParam("month") String month) {
+
+        try {
+            log.info("코드로 월별 스트릭 조회 요청: code={}, year={}, month={}",
+                    code, year, month);
+
+            // code로 사용자 조회
+            User user = userRepository.findByCode(code)
+                    .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 사용자 코드입니다."));
+
+            // 년월 유효성 검증
+            validateYearMonth(year, month);
+
+            // 월별 스트릭 데이터 조회
+            Object monthlyStreakData = streakService.getMonthlyStreakData(user, year, month);
+
+            log.info("코드로 월별 스트릭 조회 성공: code={}, 사용자={}, year={}, month={}",
+                    code, user.getOauthId(), year, month);
+
+            return ResponseUtil.buildResponse(200, "스트릭 조회에 성공하였습니다.", monthlyStreakData);
+
+        } catch (IllegalArgumentException e) {
+            log.warn("코드로 월별 스트릭 조회 실패 - 잘못된 요청: {}", e.getMessage());
+            return ResponseUtil.buildResponse(400, "잘못된 접근입니다",
+                    Map.of("example", e.getMessage()));
+
+        } catch (Exception e) {
+            log.error("코드로 월별 스트릭 조회 중 오류 발생", e);
             return ResponseUtil.buildResponse(500, "내부 서버 오류입니다. 다시 접속해주세요.", null);
         }
     }

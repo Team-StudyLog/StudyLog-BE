@@ -10,6 +10,7 @@ import org.example.studylog.util.ResponseUtil;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -39,6 +40,33 @@ public class MainController {
 
         } catch (Exception e) {
             log.error("메인 페이지 조회 중 오류 발생", e);
+            return ResponseUtil.buildResponse(500, "내부 서버 오류입니다. 다시 접속해주세요.", null);
+        }
+    }
+
+    @GetMapping("/main/{code}")
+    public ResponseEntity<?> getMainPageByCode(@PathVariable String code) {
+        // code로 사용자 조회하여 메인페이지 데이터 반환
+        try {
+            log.info("코드로 메인 페이지 조회 요청: code={}", code);
+
+            // code로 사용자 조회
+            User user = userRepository.findByCode(code)
+                    .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 사용자 코드입니다."));
+
+            // MainService에서 메인 페이지 데이터를 조회
+            Object mainPageData = mainService.getMainPageData(user);
+
+            log.info("코드로 메인 페이지 조회 성공: code={}, 사용자={}", code, user.getOauthId());
+
+            return ResponseUtil.buildResponse(200, "메인 페이지 조회에 성공하였습니다.", mainPageData);
+
+        } catch (IllegalArgumentException e) {
+            log.warn("코드로 메인 페이지 조회 실패 - 잘못된 요청: {}", e.getMessage());
+            return ResponseUtil.buildResponse(404, e.getMessage(), null);
+
+        } catch (Exception e) {
+            log.error("코드로 메인 페이지 조회 중 오류 발생", e);
             return ResponseUtil.buildResponse(500, "내부 서버 오류입니다. 다시 접속해주세요.", null);
         }
     }
