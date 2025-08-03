@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.studylog.entity.user.User;
 import org.example.studylog.repository.StudyRecordRepository;
+import org.example.studylog.repository.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,6 +20,7 @@ import java.util.Map;
 public class StreakService {
 
     private final StudyRecordRepository studyRecordRepository;
+    private final UserRepository userRepository;
 
     @Transactional(readOnly = true)
     public Map<String, Integer> getMonthlyStreakData(User user, String year, String month) {
@@ -40,13 +42,33 @@ public class StreakService {
             Long recordCount = studyRecordRepository.countByUserAndCreateDateDate(user, date);
 
             // 기록이 있는 날만 Map에 추가
-            if (recordCount > 0) {
-                streakData.put(date.format(formatter), recordCount.intValue());
-            }
+//            if (recordCount > 0) {
+//                streakData.put(date.format(formatter), recordCount.intValue());
+//            }
+            // 수정: 모든 날 반환
+            streakData.put(date.format(formatter), recordCount.intValue());
         }
 
         log.info("월별 스트릭 데이터 조회 완료: 사용자={}, {}년 {}월, 기록 있는 날수={}",
                 user.getOauthId(), year, month, streakData.size());
+
+        return streakData;
+    }
+    @Transactional(readOnly = true)
+    public Map<String, Integer> getMonthlyStreakDataByCode(String code, String year, String month) {
+        log.info("코드로 월별 스트릭 데이터 조회 시작: code={}, {}년 {}월", code, year, month);
+
+        // code로 사용자 조회
+        User user = userRepository.findByCode(code)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 사용자 코드입니다."));
+
+        log.info("코드로 사용자 조회 완료: code={}, 사용자={}", code, user.getOauthId());
+
+        // 기존 getMonthlyStreakData 메서드 로직 재사용
+        Map<String, Integer> streakData = getMonthlyStreakData(user, year, month);
+
+        log.info("코드로 월별 스트릭 데이터 조회 완료: code={}, 사용자={}, {}년 {}월, 기록 있는 날수={}",
+                code, user.getOauthId(), year, month, streakData.size());
 
         return streakData;
     }
