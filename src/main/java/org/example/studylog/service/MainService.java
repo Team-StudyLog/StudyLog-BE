@@ -46,7 +46,7 @@ public class MainService {
                 .name(user.getNickname())
                 .intro(user.getIntro())
                 .level(user.getLevel())
-                .uuid(user.getUuid().toString())
+                .code(user.getCode())
                 .build();
 
         // 3. 스트릭 정보 생성 (현재 월 데이터 활용)
