@@ -40,9 +40,11 @@ public class StreakService {
             Long recordCount = studyRecordRepository.countByUserAndCreateDateDate(user, date);
 
             // 기록이 있는 날만 Map에 추가
-            if (recordCount > 0) {
-                streakData.put(date.format(formatter), recordCount.intValue());
-            }
+//            if (recordCount > 0) {
+//                streakData.put(date.format(formatter), recordCount.intValue());
+//            }
+            // 수정: 모든 날 반환
+            streakData.put(date.format(formatter), recordCount.intValue());
         }
 
         log.info("월별 스트릭 데이터 조회 완료: 사용자={}, {}년 {}월, 기록 있는 날수={}",
