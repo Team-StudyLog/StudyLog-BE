@@ -27,9 +27,16 @@ public class StreakController {
     @GetMapping("/streak")
     public ResponseEntity<?> getMonthlyStreak(
             @AuthenticationPrincipal CustomOAuth2User currentUser,
+            @RequestParam(required = false) String code,
             @RequestParam("year") String year,
             @RequestParam("month") String month) {
 
+        // code 파라미터가 있으면 코드로 조회
+        if (code != null && !code.trim().isEmpty()) {
+            return getMonthlyStreakByCode(code, year, month);  // private 메서드 호출
+        }
+
+        // 기존 로직 (인증된 사용자)
         try {
             log.info("월별 스트릭 조회 요청: 사용자={}, year={}, month={}",
                     currentUser.getName(), year, month);
@@ -39,10 +46,7 @@ public class StreakController {
                 return ResponseUtil.buildResponse(401, "접근 권한이 없습니다.", false);
             }
 
-            // 년월 유효성 검증
             validateYearMonth(year, month);
-
-            // 월별 스트릭 데이터 조회
             Object monthlyStreakData = streakService.getMonthlyStreakData(user, year, month);
 
             log.info("월별 스트릭 조회 성공: 사용자={}, year={}, month={}",
@@ -52,8 +56,7 @@ public class StreakController {
 
         } catch (IllegalArgumentException e) {
             log.warn("월별 스트릭 조회 실패 - 잘못된 요청: {}", e.getMessage());
-            return ResponseUtil.buildResponse(400, "잘못된 접근입니다",
-                    Map.of("example", e.getMessage()));
+            return ResponseUtil.buildResponse(400, "잘못된 접근입니다", Map.of("example", e.getMessage()));
 
         } catch (Exception e) {
             log.error("월별 스트릭 조회 중 오류 발생", e);
@@ -61,24 +64,15 @@ public class StreakController {
         }
     }
 
-    @GetMapping("/streak/{code}")
-    public ResponseEntity<?> getMonthlyStreakByCode(
-            @PathVariable String code,
-            @RequestParam("year") String year,
-            @RequestParam("month") String month) {
-
+    // private 메서드 추가
+    private ResponseEntity<?> getMonthlyStreakByCode(String code, String year, String month) {
         try {
-            log.info("코드로 월별 스트릭 조회 요청: code={}, year={}, month={}",
-                    code, year, month);
+            log.info("코드로 월별 스트릭 조회 요청: code={}, year={}, month={}", code, year, month);
 
-            // code로 사용자 조회
             User user = userRepository.findByCode(code)
                     .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 사용자 코드입니다."));
 
-            // 년월 유효성 검증
             validateYearMonth(year, month);
-
-            // 월별 스트릭 데이터 조회
             Object monthlyStreakData = streakService.getMonthlyStreakData(user, year, month);
 
             log.info("코드로 월별 스트릭 조회 성공: code={}, 사용자={}, year={}, month={}",
@@ -88,8 +82,7 @@ public class StreakController {
 
         } catch (IllegalArgumentException e) {
             log.warn("코드로 월별 스트릭 조회 실패 - 잘못된 요청: {}", e.getMessage());
-            return ResponseUtil.buildResponse(400, "잘못된 접근입니다",
-                    Map.of("example", e.getMessage()));
+            return ResponseUtil.buildResponse(400, "잘못된 접근입니다", Map.of("example", e.getMessage()));
 
         } catch (Exception e) {
             log.error("코드로 월별 스트릭 조회 중 오류 발생", e);
