@@ -43,21 +43,16 @@ public class CustomSuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
         String role = auth.getAuthority();
 
         // 토큰 생성
-        String access = jwtUtil.createJwt("access", oauthId, role, 86400000L);
         String refresh = jwtUtil.createJwt("refresh", oauthId, role, 86400000L);
 
         // refresh 토큰 저장
         tokenService.addRefreshEntity(oauthId, refresh, 86400000L);
 
-        response.addCookie(CookieUtil.createCookie("access", access));
         response.addCookie(CookieUtil.createCookie("refresh", refresh));
 
-        // 사용자의 정보 입력 유무에 따라 분기
-        if(!customUserDetails.isProfileCompleted()){
-            response.sendRedirect("http://localhost:8080/signup");
-        } else{
-            response.sendRedirect("http://localhost:8080/main");
-        }
+        // 로그인 완료 화면으로 리다이렉션
+        response.sendRedirect("http://localhost:8080/signup");
+
     }
 
 }
