@@ -50,7 +50,7 @@ public class CustomSuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
 
         response.addCookie(CookieUtil.createCookie("refresh", refresh));
 
-        // 로그인 완료 화면으로 리다이렉션
+        // 회원가입 화면으로 리다이렉션(임시: 프론트 로그인 완료 화면으로 변경 예정)
         response.sendRedirect("http://localhost:8080/signup");
 
     }
