@@ -10,9 +10,11 @@ import org.example.studylog.entity.category.Category;
 import org.example.studylog.entity.StudyRecord;
 import org.example.studylog.entity.Streak;
 import org.example.studylog.entity.user.User;
+import org.example.studylog.event.RecordEvent;
 import org.example.studylog.repository.CategoryRepository;
 import org.example.studylog.repository.StudyRecordRepository;
 import org.example.studylog.repository.StreakRepository;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -30,6 +32,7 @@ public class StudyRecordService {
     private final StudyRecordRepository studyRecordRepository;
     private final CategoryRepository categoryRepository;
     private final StreakRepository streakRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Transactional
     public StudyRecordDTO updateStudyRecord(User user, Long recordId, UpdateStudyRecordRequestDTO requestDTO) {
@@ -74,6 +77,12 @@ public class StudyRecordService {
 
         // 2. 기록 삭제 (연관된 퀴즈들도 CASCADE로 함께 삭제됨)
         studyRecordRepository.delete(studyRecord);
+
+        // recordCount 감소
+        user.decrementRecordCount();
+        log.info("기록 삭제 이벤트 발행: USER={}, ID={}", user.getOauthId(), recordId);
+        eventPublisher.publishEvent(new RecordEvent(user));
+
         log.info("기록 삭제 완료: ID={}", recordId);
     }
 
@@ -99,6 +108,12 @@ public class StudyRecordService {
 
         // 3. 스트릭 업데이트
         StreakDTO streakDTO = updateUserStreak(user);
+
+        // recordCount 증가 & 이벤트 발행
+        log.info("기록 생성 이벤트 발행: USER={}, ID={}", user.getOauthId(), savedStudyRecord.getId());
+        user.incrementRecordCount();
+        eventPublisher.publishEvent(new RecordEvent(user));
+        log.info("기록 생성 이벤트 종료: USER={}, ID={}", user.getOauthId(), savedStudyRecord.getId());
 
         // 4. 응답 DTO 생성
         StudyRecordDTO recordDTO = convertToStudyRecordDTO(savedStudyRecord);

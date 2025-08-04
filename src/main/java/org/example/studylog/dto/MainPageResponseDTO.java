@@ -30,7 +30,7 @@ public class MainPageResponseDTO {
         private String name;
         private String intro;
         private Integer level;
-        private String uuid;
+        private String code;
     }
 
     @Getter
