@@ -27,32 +27,45 @@ public class JWTFilter extends OncePerRequestFilter {
     }
 
     @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
+        String path = request.getRequestURI();
+
+        // 제외할 URI 리스트
+        // 로그인 완료 직후 접근하는 페이지들, 토큰 재발급 API, 정적 리소스 제외
+        return path.equals("/signup")          // 로그인 완료 페이지
+                || path.equals("/login-success")   // (예시) 다른 완료 페이지
+                || path.equals("/login")
+                || path.equals("/")
+                || path.equals("/index.html")
+                || path.startsWith("/static/")
+                || path.startsWith("/.well-known")
+                || path.endsWith(".css")
+                || path.endsWith(".js")
+                || path.equals("/auth/token-reissue");
+    }
+
+    @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
 
         String requestURI = request.getRequestURI();
-        if (requestURI.equals("/auth/token-reissue")) {
-            filterChain.doFilter(request, response); // 토큰 검사 생략
+//        if (requestURI.equals("/auth/token-reissue") || requestURI.equals("/")) {
+//            filterChain.doFilter(request, response); // 토큰 검사 생략
+//            return;
+//        }
+
+        // 요청(request)에서 Authorization 헤더 찾기
+        String authorization = request.getHeader("Authorization");
+
+        // Authorization 헤더 검증
+        if(authorization == null || !authorization.startsWith("Bearer ")){
+            log.warn("Authorization 헤더 검증에 실패: REQUEST_URI = {}", requestURI);
+            // 해당 필더 종료
+            filterChain.doFilter(request, response);
+            // 메소드 종료
             return;
         }
 
-        //cookie들을 불러온 뒤 access Key에 담긴 쿠키를 찾음
-        String accessToken = null;
-
-        Cookie[] cookies = request.getCookies();
-
-        if(cookies != null){
-            for (Cookie cookie : cookies) {
-                log.debug("요청 쿠키: {}={}", cookie.getName(), cookie.getValue());
-                System.out.println(cookie.getName());
-                if (cookie.getName().equals("access")) {
-
-                    accessToken = cookie.getValue();
-                }
-            }
-        } else{
-            log.debug("요청에 쿠키가 없습니다. (from {} )", request.getRequestURI());
-        }
-
+        String accessToken = authorization.split(" ")[1];
 
         //Authorization 검증
         if (accessToken == null) {
