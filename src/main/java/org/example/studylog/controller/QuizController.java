@@ -1,9 +1,14 @@
 package org.example.studylog.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.example.studylog.dto.BackgroundDTO;
 import org.example.studylog.dto.oauth.CustomOAuth2User;
 import org.example.studylog.dto.quiz.CreateQuizRequestDTO;
 import org.example.studylog.dto.quiz.QuizListResponseDTO;
@@ -30,6 +35,10 @@ public class QuizController {
     private final QuizService quizService;
 
     @Operation(summary = "퀴즈 생성", description = "recordId로 친구 생성 API")
+    @ApiResponse(responseCode = "200", description = "퀴즈 생성 완료",
+            content = @Content(
+                    mediaType = "application/json",
+                    array = @ArraySchema(schema = @Schema(implementation = QuizResponseDTO.class))))
     @PostMapping("/{recordId}")
     public ResponseEntity<?> createQuiz(
             @AuthenticationPrincipal CustomOAuth2User currentUser,
@@ -55,6 +64,10 @@ public class QuizController {
     }
 
     @Operation(summary = "퀴즈 상세 조회", description = "quizId로 퀴즈 상세 조회 API")
+    @ApiResponse(responseCode = "200", description = "퀴즈 상세 조회 완료",
+            content = @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = QuizResponseDTO.class)))
     @GetMapping("/{quizId}")
     public ResponseEntity<?> getQuiz(@AuthenticationPrincipal CustomOAuth2User currentUser,
                                      @PathVariable Long quizId){
@@ -73,7 +86,11 @@ public class QuizController {
         }
     }
 
-    @Operation(summary = "퀴즈 상세 조회", description = "quizId로 퀴즈 상세 조회 API")
+    @Operation(summary = "퀴즈 목록 조회", description = "query, date, categoryId로 퀴즈 상세 조회 API")
+    @ApiResponse(responseCode = "200", description = "퀴즈 목록 조회 완료",
+            content = @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = QuizListResponseDTO.class)))
     @GetMapping
     public ResponseEntity<?> getQuizList(
             @AuthenticationPrincipal CustomOAuth2User currentUser,
