@@ -29,7 +29,7 @@ public class UserController {
 
     private final UserService userService;
 
-    @Operation(summary = "프로필 생성 api", description = "프로필 생성을 위한 api")
+    @Operation(summary = "프로필 생성", description = "프로필 생성을 위한 api")
     @ApiResponse(
             responseCode = "200",
             description = "사용자 프로필 생성 완료",
@@ -51,7 +51,7 @@ public class UserController {
         return ResponseUtil.buildResponse(200, "사용자 프로필 생성 완료", dto);
     }
 
-    @Operation(summary = "프로필 수정 api", description = "프로필 수정을 위한 api")
+    @Operation(summary = "프로필 수정", description = "프로필 수정을 위한 api")
     @ApiResponse(responseCode = "200", description = "사용자 프로필 수정 완료",
             content = @Content(
                     mediaType = "application/json",
@@ -66,7 +66,7 @@ public class UserController {
         return ResponseUtil.buildResponse(200, "사용자 프로필 수정 완료", dto);
     }
 
-    @Operation(summary = "프로필 조회 api")
+    @Operation(summary = "프로필 조회")
     @GetMapping("/profile")
     @ApiResponse(responseCode = "200", description = "사용자 프로필 조회 성공",
             content = @Content(
@@ -81,7 +81,7 @@ public class UserController {
         return ResponseUtil.buildResponse(200, "사용자 프로필 조회 성공", dto);
     }
 
-    @Operation(summary = "로그인 유저의 마이페이지 조회 api")
+    @Operation(summary = "로그인 유저의 마이페이지 조회")
     @ApiResponse(responseCode = "200", description = "사용자 정보 조회 성공",
             content = @Content(
                     mediaType = "application/json",
@@ -96,9 +96,8 @@ public class UserController {
         return ResponseUtil.buildResponse(200, "사용자 정보 조회 성공", dto);
     }
 
-    @Operation(summary = "배경화면 수정 api")
+    @Operation(summary = "배경화면 수정")
     @PatchMapping(path = "/background", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-//    @PatchMapping("/background")
     @ApiResponse(responseCode = "200", description = "사용자 배경화면 수정 완료",
             content = @Content(
                     mediaType = "application/json",
