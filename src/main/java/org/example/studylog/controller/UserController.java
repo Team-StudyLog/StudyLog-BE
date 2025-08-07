@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.studylog.dto.*;
 import org.example.studylog.dto.oauth.CustomOAuth2User;
+import org.example.studylog.dto.oauth.TokenDTO;
 import org.example.studylog.service.UserService;
 import org.example.studylog.util.ResponseUtil;
 import org.springframework.http.MediaType;
@@ -28,18 +29,33 @@ public class UserController {
 
     private final UserService userService;
 
-    @Operation(summary = "프로필 업데이트 api", description = "프로필 생성을 위한 api")
-    @PostMapping("/profile")
+    @Operation(summary = "프로필 생성 api", description = "프로필 생성을 위한 api")
+    @ApiResponse(
+            responseCode = "200",
+            description = "사용자 프로필 생성 완료",
+            content = @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(
+                            implementation = ProfileResponseDTO.class
+                    )))
+    @PostMapping(path = "/profile", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> createProfile(@Valid @ModelAttribute ProfileCreateRequestDTO request) {
         // 로그인한 사용자 oauthId 가져오기
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         String oauthId = auth.getName();
+        log.info("사용자 프로필 생성 시작: oauthId = {}", oauthId);
 
         ProfileResponseDTO dto = userService.createUserProfile(request, oauthId);
+        log.info("사용자 프로필 생성 완료: profileImage = {}, nickname = {}, intro = {}",
+                dto.getProfileImage(), dto.getNickname(), dto.getIntro());
         return ResponseUtil.buildResponse(200, "사용자 프로필 생성 완료", dto);
     }
 
     @Operation(summary = "프로필 수정 api", description = "프로필 수정을 위한 api")
+    @ApiResponse(responseCode = "200", description = "사용자 프로필 수정 완료",
+            content = @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = ProfileResponseDTO.class)))
     @PatchMapping(path = "/profile", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> updateProfile(@ModelAttribute ProfileUpdateRequestDTO request) {
         // 로그인한 사용자 oauthId 가져오기
@@ -52,8 +68,10 @@ public class UserController {
 
     @Operation(summary = "프로필 조회 api")
     @GetMapping("/profile")
-    @ApiResponse(responseCode = "200", description = "성공 시 data 필드는 다음과 같습니다",
-            content = @Content(schema = @Schema(implementation = ProfileResponseDTO.class)))
+    @ApiResponse(responseCode = "200", description = "사용자 프로필 조회 성공",
+            content = @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = ProfileResponseDTO.class)))
     public ResponseEntity<?> getProfile() {
         // 로그인한 사용자 oauthId 가져오기
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
@@ -64,6 +82,10 @@ public class UserController {
     }
 
     @Operation(summary = "로그인 유저의 마이페이지 조회 api")
+    @ApiResponse(responseCode = "200", description = "사용자 정보 조회 성공",
+            content = @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = UserInfoResponseDTO.class)))
     @GetMapping
     public ResponseEntity<?> getUserInfo() {
         // 로그인한 사용자 oauthId 가져오기
@@ -75,9 +97,12 @@ public class UserController {
     }
 
     @Operation(summary = "배경화면 수정 api")
-    @PatchMapping("/background")
-    @ApiResponse(responseCode = "200", description = "성공 시 data 필드는 다음과 같습니다",
-            content = @Content(schema = @Schema(implementation = BackgroundDTO.ResponseDTO.class)))
+    @PatchMapping(path = "/background", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+//    @PatchMapping("/background")
+    @ApiResponse(responseCode = "200", description = "사용자 배경화면 수정 완료",
+            content = @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = BackgroundDTO.ResponseDTO.class)))
     public ResponseEntity<?> updateBackground(
             @AuthenticationPrincipal CustomOAuth2User currentUser,
             @Valid @ModelAttribute BackgroundDTO.RequestDTO dto) {
