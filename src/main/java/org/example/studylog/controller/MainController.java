@@ -1,5 +1,12 @@
 package org.example.studylog.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.studylog.dto.oauth.CustomOAuth2User;
@@ -17,15 +24,87 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequiredArgsConstructor
 @Slf4j
+@Tag(name = "Main", description = "메인 페이지 API")
 public class MainController {
 
     private final MainService mainService;
     private final UserRepository userRepository;
 
+    @Operation(
+            summary = "메인 페이지 조회",
+            description = "메인 페이지 데이터를 조회합니다. 인증된 사용자 또는 공유 코드로 조회 가능합니다."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "메인 페이지 조회 성공",
+                    content = @Content(
+                            mediaType = "application/json",
+                            examples = @ExampleObject(
+                                    value = "{"
+                                            + "\"status\": 200,"
+                                            + "\"message\": \"메인 페이지 조회에 성공하였습니다.\","
+                                            + "\"data\": {"
+                                            + "\"todayRecords\": 3,"
+                                            + "\"currentStreak\": 5,"
+                                            + "\"totalRecords\": 127,"
+                                            + "\"categories\": ["
+                                            + "{\"id\": 1, \"name\": \"Spring Boot\", \"color\": \"#FF5733\"},"
+                                            + "{\"id\": 2, \"name\": \"React\", \"color\": \"#61DAFB\"}"
+                                            + "],"
+                                            + "\"recentRecords\": []"
+                                            + "}"
+                                            + "}"
+                            )
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "인증 실패 (접근 권한 없음)",
+                    content = @Content(
+                            mediaType = "application/json",
+                            examples = @ExampleObject(
+                                    value = "{"
+                                            + "\"status\": 401,"
+                                            + "\"message\": \"접근 권한이 없습니다.\","
+                                            + "\"data\": false"
+                                            + "}"
+                            )
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "사용자 코드를 찾을 수 없음",
+                    content = @Content(
+                            mediaType = "application/json",
+                            examples = @ExampleObject(
+                                    value = "{"
+                                            + "\"status\": 404,"
+                                            + "\"message\": \"존재하지 않는 사용자 코드입니다.\","
+                                            + "\"data\": null"
+                                            + "}"
+                            )
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "500",
+                    description = "서버 내부 오류",
+                    content = @Content(
+                            mediaType = "application/json",
+                            examples = @ExampleObject(
+                                    value = "{"
+                                            + "\"status\": 500,"
+                                            + "\"message\": \"내부 서버 오류입니다. 다시 접속해주세요.\","
+                                            + "\"data\": null"
+                                            + "}"
+                            )
+                    )
+            )
+    })
     @GetMapping("/main")
     public ResponseEntity<?> getMainPage(
-            @AuthenticationPrincipal CustomOAuth2User currentUser,
-            @RequestParam(required = false) String code) {
+            @Parameter(hidden = true) @AuthenticationPrincipal CustomOAuth2User currentUser,
+            @Parameter(description = "사용자 공유 코드 (선택적)", example = "ABC123") @RequestParam(required = false) String code) {
 
         // code 파라미터가 있으면 코드로 조회, 없으면 기존 로직
         if (code != null && !code.trim().isEmpty()) {
