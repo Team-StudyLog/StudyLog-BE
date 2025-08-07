@@ -4,6 +4,7 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.extern.slf4j.Slf4j;
 import org.example.studylog.dto.oauth.CustomOAuth2User;
 import org.example.studylog.entity.user.User;
 import org.example.studylog.repository.UserRepository;
@@ -14,6 +15,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 
+@Slf4j
 public class ProfileCheckFilter extends OncePerRequestFilter {
 
     private final UserRepository userRepository;
@@ -38,7 +40,8 @@ public class ProfileCheckFilter extends OncePerRequestFilter {
 
             // /signup, /users/profile의 PUT 요청은 허용, 그 외는 막음
             if(!isProfileCompleted && !requestURI.startsWith("/signup")&&
-                    !(requestURI.equals("/users/profile") && method.equalsIgnoreCase("PUT"))) {
+                    !(requestURI.equals("/users/profile") && method.equalsIgnoreCase("POST"))) {
+                log.info("ProfileCheckFilter로 인해 /signup으로 리다이렉션");
                 response.sendRedirect("/signup");
                 return;
             }
