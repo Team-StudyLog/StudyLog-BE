@@ -1,15 +1,20 @@
 package org.example.studylog.controller.jwt;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.enums.ParameterIn;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.example.studylog.dto.ResponseDTO;
 import org.example.studylog.dto.oauth.TokenDTO;
-import org.example.studylog.entity.user.User;
 import org.example.studylog.jwt.JWTUtil;
 import org.example.studylog.service.TokenService;
 import org.example.studylog.util.CookieUtil;
 import org.example.studylog.util.ResponseUtil;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -27,6 +32,25 @@ public class AuthController {
         this.tokenService = tokenService;
     }
 
+    @Operation(summary = "AccessToken 재발급 API",
+            parameters = {
+                @Parameter(
+                        in = ParameterIn.COOKIE,
+                        name = "refresh",
+                        required = true,
+                        description = "리프레시 토큰"
+                )
+            })
+    @ApiResponse(
+            responseCode = "200",
+            description = "토큰 재발급 완료",
+            content = @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(
+                        name = "TokenResponseDTO",
+                        implementation = TokenDTO.ResponseDTO.class
+            ))
+    )
     @PostMapping("/token-reissue")
     public ResponseEntity<?> reissue(HttpServletRequest request, HttpServletResponse response){
 

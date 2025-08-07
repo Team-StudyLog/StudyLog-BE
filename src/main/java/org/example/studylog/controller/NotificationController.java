@@ -1,6 +1,12 @@
 package org.example.studylog.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import lombok.RequiredArgsConstructor;
+import org.example.studylog.dto.ProfileResponseDTO;
 import org.example.studylog.dto.notification.NotificationListResponseDTO;
 import org.example.studylog.service.NotificationService;
 import org.example.studylog.util.ResponseUtil;
@@ -20,6 +26,8 @@ public class NotificationController {
 
     private final NotificationService notificationService;
 
+    @Operation(summary = "SSE 구독")
+    @ApiResponse(content = @Content(schema = @Schema(implementation = SseEmitter.class)))
     @GetMapping(value = "/subscribe", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public SseEmitter subscribe() {
         // 로그인한 사용자 oauthId 가져오기
@@ -29,6 +37,11 @@ public class NotificationController {
         return notificationService.createEmitter(oauthId);
     }
 
+    @Operation(summary = "알림 목록 조회")
+    @ApiResponse(responseCode = "200", description = "알림 목록 조회 완료",
+            content = @Content(
+                    mediaType = "application/json",
+                    array = @ArraySchema(schema = @Schema(implementation = NotificationListResponseDTO.class))))
     @GetMapping("/notifications")
     public ResponseEntity<?> getNotificationList() {
         // 로그인한 사용자 oauthId 가져오기
