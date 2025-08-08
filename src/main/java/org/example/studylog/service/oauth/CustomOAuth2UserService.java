@@ -56,6 +56,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
                     .nickname(oAuth2Response.getName())
                     .profileImage(oAuth2Response.getProfileImage())
                     .level(0)
+                    .recordCount(0L)
                     .role(Role.ROLE_USER)
                     .isProfileCompleted(false)
                     .uuid(UUID.randomUUID())
