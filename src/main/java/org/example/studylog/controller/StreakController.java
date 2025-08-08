@@ -1,5 +1,13 @@
 package org.example.studylog.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.studylog.dto.oauth.CustomOAuth2User;
@@ -19,17 +27,88 @@ import java.util.Map;
 @RestController
 @RequiredArgsConstructor
 @Slf4j
+@Tag(name = "Streak", description = "스트릭(연속 학습) 관련 API")
 public class StreakController {
 
     private final StreakService streakService;
     private final UserRepository userRepository;
 
+    @Operation(
+            summary = "월별 스트릭 조회",
+            description = "특정 연도와 월의 일별 학습 기록 개수를 조회합니다. 인증된 사용자 또는 공유 코드로 조회 가능합니다."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "스트릭 조회 성공",
+                    content = @Content(
+                            mediaType = "application/json",
+                            examples = @ExampleObject(
+                                    value = "{"
+                                            + "\"status\": 200,"
+                                            + "\"message\": \"스트릭 조회에 성공하였습니다.\","
+                                            + "\"data\": {"
+                                            + "\"2025-07-01\": 0,"
+                                            + "\"2025-07-02\": 3,"
+                                            + "\"2025-07-03\": 1,"
+                                            + "\"2025-07-04\": 0,"
+                                            + "\"2025-07-05\": 2"
+                                            + "}"
+                                            + "}"
+                            )
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "잘못된 요청 (유효하지 않은 년도/월)",
+                    content = @Content(
+                            mediaType = "application/json",
+                            examples = @ExampleObject(
+                                    value = "{"
+                                            + "\"status\": 400,"
+                                            + "\"message\": \"잘못된 접근입니다\","
+                                            + "\"data\": {"
+                                            + "\"example\": \"올바르지 않은 월입니다\""
+                                            + "}"
+                                            + "}"
+                            )
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "인증 실패 (접근 권한 없음)",
+                    content = @Content(
+                            mediaType = "application/json",
+                            examples = @ExampleObject(
+                                    value = "{"
+                                            + "\"status\": 401,"
+                                            + "\"message\": \"접근 권한이 없습니다.\","
+                                            + "\"data\": false"
+                                            + "}"
+                            )
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "500",
+                    description = "서버 내부 오류",
+                    content = @Content(
+                            mediaType = "application/json",
+                            examples = @ExampleObject(
+                                    value = "{"
+                                            + "\"status\": 500,"
+                                            + "\"message\": \"내부 서버 오류입니다. 다시 접속해주세요.\","
+                                            + "\"data\": null"
+                                            + "}"
+                            )
+                    )
+            )
+    })
     @GetMapping("/streak")
     public ResponseEntity<?> getMonthlyStreak(
-            @AuthenticationPrincipal CustomOAuth2User currentUser,
-            @RequestParam(required = false) String code,
-            @RequestParam("year") String year,
-            @RequestParam("month") String month) {
+            @Parameter(hidden = true) @AuthenticationPrincipal CustomOAuth2User currentUser,
+            @Parameter(description = "사용자 공유 코드 (선택적)", example = "ABC123") @RequestParam(required = false) String code,
+            @Parameter(description = "조회할 년도", required = true, example = "2025") @RequestParam("year") String year,
+            @Parameter(description = "조회할 월 (1-12)", required = true, example = "7") @RequestParam("month") String month) {
 
         // code 파라미터가 있으면 코드로 조회
         if (code != null && !code.trim().isEmpty()) {

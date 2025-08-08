@@ -1,6 +1,13 @@
 package org.example.studylog.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.studylog.dto.oauth.CustomOAuth2User;
@@ -24,14 +31,27 @@ import java.util.Map;
 @RequiredArgsConstructor
 @Validated
 @Slf4j
+@Tag(name = "Study Records", description = "학습 기록 관련 API")
 public class StudyRecordController {
 
     private final StudyRecordService studyRecordService;
     private final UserRepository userRepository;
 
+    @Operation(summary = "학습 기록 생성", description = "새로운 학습 기록을 생성합니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "201", description = "학습 기록 생성 성공",
+                    content = @Content(mediaType = "application/json",
+                            examples = @ExampleObject(value = "{\"status\": 201, \"message\": \"기록 생성 성공\", \"data\": {\"recordId\": 1, \"title\": \"Spring Boot 학습\"}}"))),
+            @ApiResponse(responseCode = "400", description = "잘못된 요청",
+                    content = @Content(mediaType = "application/json")),
+            @ApiResponse(responseCode = "401", description = "인증 실패",
+                    content = @Content(mediaType = "application/json")),
+            @ApiResponse(responseCode = "500", description = "서버 오류",
+                    content = @Content(mediaType = "application/json"))
+    })
     @PostMapping
     public ResponseEntity<?> createStudyRecord(
-            @AuthenticationPrincipal CustomOAuth2User currentUser,
+            @Parameter(hidden = true) @AuthenticationPrincipal CustomOAuth2User currentUser,
             @Valid @RequestBody CreateStudyRecordRequestDTO requestDTO) {
 
         try {
@@ -59,10 +79,21 @@ public class StudyRecordController {
         }
     }
 
+    @Operation(summary = "학습 기록 상세 조회", description = "특정 학습 기록의 상세 정보를 조회합니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "조회 성공",
+                    content = @Content(mediaType = "application/json")),
+            @ApiResponse(responseCode = "401", description = "인증 실패",
+                    content = @Content(mediaType = "application/json")),
+            @ApiResponse(responseCode = "404", description = "기록을 찾을 수 없음",
+                    content = @Content(mediaType = "application/json")),
+            @ApiResponse(responseCode = "500", description = "서버 오류",
+                    content = @Content(mediaType = "application/json"))
+    })
     @GetMapping("/{recordId}")
     public ResponseEntity<?> getStudyRecord(
-            @AuthenticationPrincipal CustomOAuth2User currentUser,
-            @PathVariable Long recordId) {
+            @Parameter(hidden = true) @AuthenticationPrincipal CustomOAuth2User currentUser,
+            @Parameter(description = "학습 기록 ID", example = "1") @PathVariable Long recordId) {
 
         try {
             log.info("기록 상세 조회 요청: 사용자={}, recordId={}", currentUser.getName(), recordId);
@@ -88,10 +119,23 @@ public class StudyRecordController {
         }
     }
 
+    @Operation(summary = "학습 기록 수정", description = "기존 학습 기록을 수정합니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "수정 성공",
+                    content = @Content(mediaType = "application/json")),
+            @ApiResponse(responseCode = "400", description = "잘못된 요청",
+                    content = @Content(mediaType = "application/json")),
+            @ApiResponse(responseCode = "401", description = "인증 실패",
+                    content = @Content(mediaType = "application/json")),
+            @ApiResponse(responseCode = "404", description = "기록을 찾을 수 없음",
+                    content = @Content(mediaType = "application/json")),
+            @ApiResponse(responseCode = "500", description = "서버 오류",
+                    content = @Content(mediaType = "application/json"))
+    })
     @PutMapping("/{recordId}")
     public ResponseEntity<?> updateStudyRecord(
-            @AuthenticationPrincipal CustomOAuth2User currentUser,
-            @PathVariable Long recordId,
+            @Parameter(hidden = true) @AuthenticationPrincipal CustomOAuth2User currentUser,
+            @Parameter(description = "학습 기록 ID", example = "1") @PathVariable Long recordId,
             @Valid @RequestBody UpdateStudyRecordRequestDTO requestDTO) {
 
         try {
@@ -119,10 +163,21 @@ public class StudyRecordController {
         }
     }
 
+    @Operation(summary = "학습 기록 삭제", description = "특정 학습 기록을 삭제합니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "삭제 성공",
+                    content = @Content(mediaType = "application/json")),
+            @ApiResponse(responseCode = "401", description = "인증 실패",
+                    content = @Content(mediaType = "application/json")),
+            @ApiResponse(responseCode = "404", description = "기록을 찾을 수 없음",
+                    content = @Content(mediaType = "application/json")),
+            @ApiResponse(responseCode = "500", description = "서버 오류",
+                    content = @Content(mediaType = "application/json"))
+    })
     @DeleteMapping("/{recordId}")
     public ResponseEntity<?> deleteStudyRecord(
-            @AuthenticationPrincipal CustomOAuth2User currentUser,
-            @PathVariable Long recordId) {
+            @Parameter(hidden = true) @AuthenticationPrincipal CustomOAuth2User currentUser,
+            @Parameter(description = "학습 기록 ID", example = "1") @PathVariable Long recordId) {
 
         try {
             log.info("기록 삭제 요청: 사용자={}, recordId={}", currentUser.getName(), recordId);
@@ -224,6 +279,8 @@ public class StudyRecordController {
     }
 
 
+    @Operation(summary = "테스트 엔드포인트", description = "API 연결 테스트용 엔드포인트")
+    @ApiResponse(responseCode = "200", description = "테스트 성공")
     @GetMapping("/test")
     public ResponseEntity<?> testEndpoint() {
         log.info("=== TEST 엔드포인트 호출됨 ===");

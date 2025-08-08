@@ -11,7 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 @Service
@@ -22,11 +22,13 @@ public class StreakService {
     private final StudyRecordRepository studyRecordRepository;
     private final UserRepository userRepository;
 
+
+
     @Transactional(readOnly = true)
     public Map<String, Integer> getMonthlyStreakData(User user, String year, String month) {
         log.info("월별 스트릭 데이터 조회 시작: 사용자={}, {}년 {}월", user.getOauthId(), year, month);
 
-        Map<String, Integer> streakData = new HashMap<>();
+        Map<String, Integer> streakData = new LinkedHashMap<>();
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
         // YearMonth 객체 생성
@@ -41,34 +43,12 @@ public class StreakService {
             LocalDate date = LocalDate.of(yearInt, monthInt, day);
             Long recordCount = studyRecordRepository.countByUserAndCreateDateDate(user, date);
 
-            // 기록이 있는 날만 Map에 추가
-//            if (recordCount > 0) {
-//                streakData.put(date.format(formatter), recordCount.intValue());
-//            }
-            // 수정: 모든 날 반환
+            // 모든 날짜를 순서대로 LinkedHashMap에 추가
             streakData.put(date.format(formatter), recordCount.intValue());
         }
 
-        log.info("월별 스트릭 데이터 조회 완료: 사용자={}, {}년 {}월, 기록 있는 날수={}",
+        log.info("월별 스트릭 데이터 조회 완료: 사용자={}, {}년 {}월, 총 일수={}",
                 user.getOauthId(), year, month, streakData.size());
-
-        return streakData;
-    }
-    @Transactional(readOnly = true)
-    public Map<String, Integer> getMonthlyStreakDataByCode(String code, String year, String month) {
-        log.info("코드로 월별 스트릭 데이터 조회 시작: code={}, {}년 {}월", code, year, month);
-
-        // code로 사용자 조회
-        User user = userRepository.findByCode(code)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 사용자 코드입니다."));
-
-        log.info("코드로 사용자 조회 완료: code={}, 사용자={}", code, user.getOauthId());
-
-        // 기존 getMonthlyStreakData 메서드 로직 재사용
-        Map<String, Integer> streakData = getMonthlyStreakData(user, year, month);
-
-        log.info("코드로 월별 스트릭 데이터 조회 완료: code={}, 사용자={}, {}년 {}월, 기록 있는 날수={}",
-                code, user.getOauthId(), year, month, streakData.size());
 
         return streakData;
     }
