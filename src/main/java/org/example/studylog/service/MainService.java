@@ -10,6 +10,7 @@ import org.example.studylog.entity.user.User;
 import org.example.studylog.repository.CategoryRepository;
 import org.example.studylog.repository.StreakRepository;
 import org.example.studylog.repository.StudyRecordRepository;
+import org.example.studylog.repository.FriendRepository;
 import org.example.studylog.repository.UserRepository;
 import org.example.studylog.repository.custom.FriendRepositoryImpl;
 import org.springframework.stereotype.Service;
@@ -29,6 +30,7 @@ import java.util.stream.Collectors;
 public class MainService {
 
     private final FriendRepositoryImpl friendRepositoryImpl;
+    private final FriendRepository friendRepository;
     private final StudyRecordRepository studyRecordRepository;
     private final StreakRepository streakRepository;
     private final CategoryRepository categoryRepository;
@@ -67,6 +69,7 @@ public class MainService {
                 .profile(profile)
                 .streak(streak)
                 .categories(categories)
+                .isFollowing(null)  // 본인 페이지는 null
                 .build();
 
         log.info("메인 페이지 데이터 조회 완료: 친구수={}, 카테고리수={}",
@@ -121,6 +124,52 @@ public class MainService {
                         .count(categoryCountMap.getOrDefault(category.getId(), 0))
                         .build())
                 .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public MainPageResponseDTO getMainPageDataWithFollowStatus(User targetUser, User currentUser) {
+        log.info("메인 페이지 데이터 조회 (팔로우 확인): 대상={}, 현재 사용자={}", 
+                targetUser.getOauthId(), currentUser != null ? currentUser.getOauthId() : "guest");
+
+        // 기존 메인 페이지 데이터 조회
+        List<FriendResponseDTO> following = friendRepositoryImpl.findFriendListByUser(targetUser);
+        
+        MainPageResponseDTO.ProfileDTO profile = MainPageResponseDTO.ProfileDTO.builder()
+                .coverImage(targetUser.getBackImage() != null ? targetUser.getBackImage() : "https://example.com/bg.jpg")
+                .profileImage(targetUser.getProfileImage())
+                .name(targetUser.getNickname())
+                .intro(targetUser.getIntro())
+                .level(targetUser.getLevel())
+                .code(targetUser.getCode())
+                .build();
+        
+        Map<String, Integer> recordCountPerDay = getCurrentStreakData(targetUser);
+        Integer maxStreak = getMaxStreak(targetUser);
+        MainPageResponseDTO.StreakDTO streak = MainPageResponseDTO.StreakDTO.builder()
+                .maxStreak(maxStreak)
+                .recordCountPerDay(recordCountPerDay)
+                .build();
+        
+        List<MainPageResponseDTO.CategoryCountDTO> categories = getCategoryCountData(targetUser);
+        
+        // 팔로우 여부 확인
+        Boolean isFollowing = null;
+        if (currentUser != null && !currentUser.getId().equals(targetUser.getId())) {
+            isFollowing = friendRepository.existsByUserAndFriend(currentUser, targetUser);
+        }
+        
+        MainPageResponseDTO response = MainPageResponseDTO.builder()
+                .following(following)
+                .profile(profile)
+                .streak(streak)
+                .categories(categories)
+                .isFollowing(isFollowing)
+                .build();
+
+        log.info("메인 페이지 데이터 조회 완료: 친구수={}, 카테고리수={}, 팔로우여부={}",
+                following.size(), categories.size(), isFollowing);
+
+        return response;
     }
 
     @Transactional(readOnly = true)
