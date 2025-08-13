@@ -19,6 +19,7 @@ public class MainPageResponseDTO {
     private ProfileDTO profile;
     private StreakDTO streak;
     private List<CategoryCountDTO> categories;
+    private Boolean isFollowing;
 
     @Getter
     @Builder
