@@ -1,6 +1,7 @@
 package org.example.studylog.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -15,6 +16,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
@@ -43,12 +45,17 @@ public class NotificationController {
                     mediaType = "application/json",
                     array = @ArraySchema(schema = @Schema(implementation = NotificationListResponseDTO.class))))
     @GetMapping("/notifications")
-    public ResponseEntity<?> getNotificationList() {
+    public ResponseEntity<?> getNotificationList(
+            @Parameter(
+                    description = "true면 읽음 처리, false면 기본 조회",
+                    example = "true"
+            )
+            @RequestParam boolean isRead) {
         // 로그인한 사용자 oauthId 가져오기
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         String oauthId = auth.getName();
 
-        List<NotificationListResponseDTO> list = notificationService.getNotificationList(oauthId);
+        List<NotificationListResponseDTO> list = notificationService.getNotificationList(oauthId, isRead);
         return ResponseUtil.buildResponse(200, "알림 목록 조회 완료", list);
     }
 

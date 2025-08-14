@@ -83,7 +83,7 @@ public class NotificationService {
     }
 
     @Transactional
-    public List<NotificationListResponseDTO> getNotificationList(String oauthId) {
+    public List<NotificationListResponseDTO> getNotificationList(String oauthId, boolean isRead) {
         User user = userRepository.findByOauthId(oauthId);
         List<Notification> notifications = notificationRepository.findTop30ByUserOrderByCreatedAtDesc(user);
 
@@ -91,11 +91,16 @@ public class NotificationService {
                 .map(NotificationListResponseDTO::from)
                 .collect(Collectors.toList());
 
-        // 알림 조회 여부를 true로 변경
-        for(Notification n : notifications){
-            if(n.isRead() == false) n.setRead(true);
+        // isRead가 true이면 읽음 처리
+        if (isRead) {
+            notifications.stream()
+                    .filter(n -> !n.isRead()) // 아직 읽지 않은 것만
+                    .forEach(n -> n.setRead(true));
         }
 
-        return list;
+        // DTO 변환 후 반환
+        return notifications.stream()
+                .map(NotificationListResponseDTO::from)
+                .collect(Collectors.toList());
     }
 }
