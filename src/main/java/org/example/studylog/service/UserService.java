@@ -6,6 +6,7 @@ import org.example.studylog.dto.*;
 import org.example.studylog.entity.user.User;
 import org.example.studylog.exception.UserNotFoundException;
 import org.example.studylog.repository.FriendRepository;
+import org.example.studylog.repository.RefreshRepository;
 import org.example.studylog.repository.UserRepository;
 import org.example.studylog.util.ResponseUtil;
 import org.springframework.stereotype.Service;
@@ -20,6 +21,7 @@ public class UserService {
     private final UserRepository userRepository;
     private final AwsS3Service awsS3Service;
     private final FriendRepository friendRepository;
+    private final RefreshRepository refreshRepository;
 
     @Transactional
     public ProfileResponseDTO createUserProfile(ProfileCreateRequestDTO request, String oauthId){
@@ -133,5 +135,28 @@ public class UserService {
         log.info("배경화면 수정 완료: 사용자={}, 배경화면 url = {}", oauthId, backImageUrl);
 
         return responseDTO;
+    }
+
+    @Transactional
+    public void deleteAccount(String oauthId) {
+        User user = userRepository.findByOauthId(oauthId);
+        if(user == null)
+            throw new IllegalArgumentException("존재하지 않는 사용자");
+
+        log.info("사용자 삭제 시작: 사용자 = {}", oauthId);
+
+        // 1. S3 버킷의 이미지 삭제 (프로필 + 배경화면 이미지)
+        awsS3Service.deleteFileByKey(user.getProfileImage());
+        awsS3Service.deleteFileByKey(user.getBackImage());
+
+        // 2. Refresh 토큰 삭제
+        refreshRepository.deleteAllByOauthId(oauthId);
+
+        // 3. 외부 연동 해제
+        
+
+        // 4. 유저 삭제
+        userRepository.delete(user);
+
     }
 }
