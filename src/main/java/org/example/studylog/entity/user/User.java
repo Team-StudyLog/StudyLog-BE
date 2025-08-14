@@ -30,9 +30,10 @@ public class User {
     @Column(length = 100)
     private String intro;
 
-    @Column(nullable = false)
+    @Column(nullable = false, length = 2048)
     private String profileImage;
 
+    @Column(length = 2048)
     private String backImage;
 
     @Column(nullable = false)
