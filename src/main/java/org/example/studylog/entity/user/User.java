@@ -67,6 +67,9 @@ public class User {
     @OneToMany(mappedBy = "user")
     private List<Category> categories = new ArrayList<>();
 
+    @Column(length = 1000)
+    private String refreshToken;
+
     // 기록 수 증가
     public void incrementRecordCount(){
         this.recordCount++;
