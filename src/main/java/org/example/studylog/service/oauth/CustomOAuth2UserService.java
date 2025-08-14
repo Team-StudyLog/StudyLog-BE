@@ -22,13 +22,9 @@ import java.util.UUID;
 public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
     private final UserRepository userRepository;
-    private final OAuth2AuthorizedClientService authorizedClientService;
 
-    public CustomOAuth2UserService(
-            UserRepository userRepository,
-            OAuth2AuthorizedClientService authorizedClientService) {
+    public CustomOAuth2UserService(UserRepository userRepository) {
         this.userRepository = userRepository;
-        this.authorizedClientService = authorizedClientService;
     }
 
     @Override
@@ -39,20 +35,6 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
         String registrationId = userRequest.getClientRegistration().getRegistrationId();
         System.out.println(registrationId);
-
-        // OAuth2AuthorizedClientService 를 통해 인증된 클라이언트 정보 로드
-        OAuth2AuthorizedClient authorizedClient = authorizedClientService.loadAuthorizedClient(
-                registrationId, oAuth2User.getName()
-        );
-
-        // RefreshToken 가져오기
-        OAuth2RefreshToken refreshToken = null;
-        if (authorizedClient != null){
-            refreshToken = authorizedClient.getRefreshToken();
-            if (refreshToken != null) {
-                log.info("Refresh Token for {}: {}", registrationId, refreshToken.getTokenValue());
-            }
-        }
 
         OAuth2Response oAuth2Response = null;
         if (registrationId.equals("kakao")){
@@ -83,7 +65,6 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
                     .uuid(UUID.randomUUID())
                     .code(generateCode())
                     .oauthId(oauthId)
-                    .refreshToken(refreshToken.getTokenValue())
                     .build();
 
             userRepository.save(user);
