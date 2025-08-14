@@ -5,9 +5,12 @@ import org.example.studylog.dto.oauth.*;
 import org.example.studylog.entity.user.Role;
 import org.example.studylog.entity.user.User;
 import org.example.studylog.repository.UserRepository;
+import org.springframework.security.oauth2.client.OAuth2AuthorizedClient;
+import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
+import org.springframework.security.oauth2.core.OAuth2RefreshToken;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 
@@ -19,9 +22,13 @@ import java.util.UUID;
 public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
     private final UserRepository userRepository;
+    private final OAuth2AuthorizedClientService authorizedClientService;
 
-    public CustomOAuth2UserService(UserRepository userRepository) {
+    public CustomOAuth2UserService(
+            UserRepository userRepository,
+            OAuth2AuthorizedClientService authorizedClientService) {
         this.userRepository = userRepository;
+        this.authorizedClientService = authorizedClientService;
     }
 
     @Override
@@ -32,6 +39,20 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
         String registrationId = userRequest.getClientRegistration().getRegistrationId();
         System.out.println(registrationId);
+
+        // OAuth2AuthorizedClientService 를 통해 인증된 클라이언트 정보 로드
+        OAuth2AuthorizedClient authorizedClient = authorizedClientService.loadAuthorizedClient(
+                registrationId, oAuth2User.getName()
+        );
+
+        // RefreshToken 가져오기
+        OAuth2RefreshToken refreshToken = null;
+        if (authorizedClient != null){
+            refreshToken = authorizedClient.getRefreshToken();
+            if (refreshToken != null) {
+                log.info("Refresh Token for {}: {}", registrationId, refreshToken.getTokenValue());
+            }
+        }
 
         OAuth2Response oAuth2Response = null;
         if (registrationId.equals("kakao")){
@@ -62,6 +83,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
                     .uuid(UUID.randomUUID())
                     .code(generateCode())
                     .oauthId(oauthId)
+                    .refreshToken(refreshToken.getTokenValue())
                     .build();
 
             userRepository.save(user);
