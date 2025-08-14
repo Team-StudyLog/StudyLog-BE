@@ -10,6 +10,8 @@ import org.example.studylog.entity.BaseEntity;
 import org.example.studylog.entity.StudyRecord;
 import org.example.studylog.entity.category.Category;
 import org.example.studylog.entity.user.User;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 import java.time.LocalDateTime;
 
@@ -44,14 +46,17 @@ public class Quiz extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "record_id", nullable = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private StudyRecord record;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private User user;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "category_id", nullable = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private Category category;
 
 }
