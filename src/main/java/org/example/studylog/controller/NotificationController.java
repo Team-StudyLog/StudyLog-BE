@@ -1,0 +1,62 @@
+package org.example.studylog.controller;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import lombok.RequiredArgsConstructor;
+import org.example.studylog.dto.ProfileResponseDTO;
+import org.example.studylog.dto.notification.NotificationListResponseDTO;
+import org.example.studylog.service.NotificationService;
+import org.example.studylog.util.ResponseUtil;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
+
+import java.util.List;
+
+@RestController
+@RequiredArgsConstructor
+public class NotificationController {
+
+    private final NotificationService notificationService;
+
+    @Operation(summary = "SSE 구독")
+    @ApiResponse(content = @Content(schema = @Schema(implementation = SseEmitter.class)))
+    @GetMapping(value = "/subscribe", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    public SseEmitter subscribe() {
+        // 로그인한 사용자 oauthId 가져오기
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String oauthId = auth.getName();
+
+        return notificationService.createEmitter(oauthId);
+    }
+
+    @Operation(summary = "알림 목록 조회")
+    @ApiResponse(responseCode = "200", description = "알림 목록 조회 완료",
+            content = @Content(
+                    mediaType = "application/json",
+                    array = @ArraySchema(schema = @Schema(implementation = NotificationListResponseDTO.class))))
+    @GetMapping("/notifications")
+    public ResponseEntity<?> getNotificationList(
+            @Parameter(
+                    description = "true면 읽음 처리, false면 기본 조회",
+                    example = "true"
+            )
+            @RequestParam boolean isRead) {
+        // 로그인한 사용자 oauthId 가져오기
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String oauthId = auth.getName();
+
+        List<NotificationListResponseDTO> list = notificationService.getNotificationList(oauthId, isRead);
+        return ResponseUtil.buildResponse(200, "알림 목록 조회 완료", list);
+    }
+
+}
