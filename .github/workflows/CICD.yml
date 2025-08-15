@@ -79,5 +79,7 @@ jobs:
           port: 22
           timeout: 60s
           script: |
+            sudo docker stop studylog_server
+            sudo docker rm studylog_server
             sudo docker pull ${{ secrets.DOCKERHUB_USERNAME }}/studylog_server:latest
             sudo docker compose -f /home/ubuntu/project/compose.yml up -d
