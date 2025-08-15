@@ -45,7 +45,8 @@ public class MainService {
 
         // 2. 프로필 정보 생성
         MainPageResponseDTO.ProfileDTO profile = MainPageResponseDTO.ProfileDTO.builder()
-                .coverImage(user.getBackImage() != null ? user.getBackImage() : "https://example.com/bg.jpg")
+                .userId(user.getId())
+                .coverImage(user.getBackImage())  // null이면 null 반환
                 .profileImage(user.getProfileImage())
                 .name(user.getNickname())
                 .intro(user.getIntro())
@@ -123,6 +124,7 @@ public class MainService {
                         .name(category.getName())
                         .count(categoryCountMap.getOrDefault(category.getId(), 0))
                         .build())
+                .sorted((a, b) -> b.getCount().compareTo(a.getCount()))  // count 기준 내림차순 정렬
                 .toList();
     }
 
@@ -135,7 +137,8 @@ public class MainService {
         List<FriendResponseDTO> following = friendRepositoryImpl.findFriendListByUser(targetUser);
         
         MainPageResponseDTO.ProfileDTO profile = MainPageResponseDTO.ProfileDTO.builder()
-                .coverImage(targetUser.getBackImage() != null ? targetUser.getBackImage() : "https://example.com/bg.jpg")
+                .userId(targetUser.getId())
+                .coverImage(targetUser.getBackImage())  // null이면 null 반환
                 .profileImage(targetUser.getProfileImage())
                 .name(targetUser.getNickname())
                 .intro(targetUser.getIntro())

@@ -26,6 +26,7 @@ public class MainPageResponseDTO {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class ProfileDTO {
+        private Long userId;
         private String coverImage;
         private String profileImage;
         private String name;
