@@ -9,6 +9,7 @@ import org.example.studylog.jwt.JWTUtil;
 import org.example.studylog.service.TokenService;
 import org.example.studylog.util.CookieUtil;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.ResponseCookie;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
@@ -52,7 +53,9 @@ public class CustomSuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
         // refresh 토큰 저장
         tokenService.addRefreshEntity(oauthId, refresh, 86400000L);
 
-        response.addCookie(CookieUtil.createCookie("refresh", refresh));
+        // ResponseCookie 생성하여 응답 헤더에 추가
+        ResponseCookie cookie = CookieUtil.createCookie("refresh", refresh);
+        response.addHeader("Set-Cookie", cookie.toString());
 
         // 회원가입 화면으로 리다이렉션(임시: 프론트 로그인 완료 화면으로 변경 예정)
         response.sendRedirect(redirectUri);

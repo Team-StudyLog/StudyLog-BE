@@ -15,6 +15,7 @@ import org.example.studylog.jwt.JWTUtil;
 import org.example.studylog.service.TokenService;
 import org.example.studylog.util.CookieUtil;
 import org.example.studylog.util.ResponseUtil;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -66,7 +67,8 @@ public class AuthController {
         TokenDTO tokenDTO = tokenService.reissueAccessToken(refresh);
 
         // Refresh 토큰은 쿠키로 전달
-        response.addCookie(CookieUtil.createCookie("refresh", tokenDTO.getRefreshToken()));
+        ResponseCookie cookie = CookieUtil.createCookie("refresh", tokenDTO.getRefreshToken());
+        response.addHeader("Set-Cookie", cookie.toString());
 
         // Access 토큰, code, isNewUser는 body로 전달
         TokenDTO.ResponseDTO dto = TokenDTO.ResponseDTO.builder()
