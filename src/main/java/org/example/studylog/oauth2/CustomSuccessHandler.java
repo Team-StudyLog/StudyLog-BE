@@ -8,6 +8,7 @@ import org.example.studylog.dto.oauth.CustomOAuth2User;
 import org.example.studylog.jwt.JWTUtil;
 import org.example.studylog.service.TokenService;
 import org.example.studylog.util.CookieUtil;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
@@ -20,6 +21,9 @@ import java.util.Iterator;
 @Component
 @Slf4j
 public class CustomSuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
+
+    @Value("${spring.redirectUri}")
+    private String redirectUri;
 
     private final JWTUtil jwtUtil;
     private final TokenService tokenService;
@@ -51,7 +55,7 @@ public class CustomSuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
         response.addCookie(CookieUtil.createCookie("refresh", refresh));
 
         // 회원가입 화면으로 리다이렉션(임시: 프론트 로그인 완료 화면으로 변경 예정)
-        response.sendRedirect("http://localhost:8080/signup");
+        response.sendRedirect(redirectUri);
 
     }
 
