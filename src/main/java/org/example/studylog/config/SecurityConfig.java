@@ -53,7 +53,7 @@ public class SecurityConfig {
 
                         CorsConfiguration configuration = new CorsConfiguration();
 
-                        configuration.setAllowedOrigins(Collections.singletonList("http://localhost:5173"));
+                        configuration.setAllowedOrigins(Arrays.asList("http://localhost:5174", "https://web.studylog.shop"));
                         configuration.setAllowedMethods(Arrays.asList(
                                 "GET","POST","PUT","PATCH","DELETE","OPTIONS"
                         ));
