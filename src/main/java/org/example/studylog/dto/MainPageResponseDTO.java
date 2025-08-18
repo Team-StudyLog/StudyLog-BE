@@ -19,12 +19,14 @@ public class MainPageResponseDTO {
     private ProfileDTO profile;
     private StreakDTO streak;
     private List<CategoryCountDTO> categories;
+    private Boolean isFollowing;
 
     @Getter
     @Builder
     @NoArgsConstructor
     @AllArgsConstructor
     public static class ProfileDTO {
+        private Long userId;
         private String coverImage;
         private String profileImage;
         private String name;

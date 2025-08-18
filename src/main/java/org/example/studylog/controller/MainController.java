@@ -45,14 +45,29 @@ public class MainController {
                                             + "\"status\": 200,"
                                             + "\"message\": \"메인 페이지 조회에 성공하였습니다.\","
                                             + "\"data\": {"
-                                            + "\"todayRecords\": 3,"
-                                            + "\"currentStreak\": 5,"
-                                            + "\"totalRecords\": 127,"
+                                            + "\"following\": [],"
+                                            + "\"profile\": {"
+                                            + "\"userId\": 1,"
+                                            + "\"coverImage\": null,"
+                                            + "\"profileImage\": \"https://example.com/profile.jpg\","
+                                            + "\"name\": \"홍길동\","
+                                            + "\"intro\": \"안녕하세요! 개발 공부 중입니다.\","
+                                            + "\"level\": 5,"
+                                            + "\"code\": \"ABC123\""
+                                            + "},"
+                                            + "\"streak\": {"
+                                            + "\"maxStreak\": 15,"
+                                            + "\"recordCountPerDay\": {"
+                                            + "\"2025-01-10\": 2,"
+                                            + "\"2025-01-11\": 1,"
+                                            + "\"2025-01-12\": 3"
+                                            + "}"
+                                            + "},"
                                             + "\"categories\": ["
-                                            + "{\"id\": 1, \"name\": \"Spring Boot\", \"color\": \"#FF5733\"},"
-                                            + "{\"id\": 2, \"name\": \"React\", \"color\": \"#61DAFB\"}"
+                                            + "{\"name\": \"Spring Boot\", \"count\": 25},"
+                                            + "{\"name\": \"React\", \"count\": 18}"
                                             + "],"
-                                            + "\"recentRecords\": []"
+                                            + "\"isFollowing\": true"
                                             + "}"
                                             + "}"
                             )
@@ -108,7 +123,7 @@ public class MainController {
 
         // code 파라미터가 있으면 코드로 조회, 없으면 기존 로직
         if (code != null && !code.trim().isEmpty()) {
-            return getMainPageByCode(code);  // private 메서드 호출
+            return getMainPageByCode(code, currentUser);  // private 메서드 호출
         }
 
         // 기존 로직 (인증된 사용자)
@@ -133,16 +148,22 @@ public class MainController {
     }
 
     // 동일 엔드포인트에서 쿼리 지원을 위해 private 메서드로 변경
-    private ResponseEntity<?> getMainPageByCode(String code) {
+    private ResponseEntity<?> getMainPageByCode(String code, CustomOAuth2User currentUser) {
         try {
             log.info("코드로 메인 페이지 조회 요청: code={}", code);
 
-            User user = userRepository.findByCode(code)
+            User targetUser = userRepository.findByCode(code)
                     .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 사용자 코드입니다."));
 
-            Object mainPageData = mainService.getMainPageData(user);
+            // 현재 사용자가 있으면 팔로우 여부 확인
+            User currentUserEntity = null;
+            if (currentUser != null) {
+                currentUserEntity = userRepository.findByOauthId(currentUser.getName());
+            }
 
-            log.info("코드로 메인 페이지 조회 성공: code={}, 사용자={}", code, user.getOauthId());
+            Object mainPageData = mainService.getMainPageDataWithFollowStatus(targetUser, currentUserEntity);
+
+            log.info("코드로 메인 페이지 조회 성공: code={}, 사용자={}", code, targetUser.getOauthId());
 
             return ResponseUtil.buildResponse(200, "메인 페이지 조회에 성공하였습니다.", mainPageData);
 
