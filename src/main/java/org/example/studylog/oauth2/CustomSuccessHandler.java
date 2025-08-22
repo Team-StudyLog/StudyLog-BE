@@ -9,6 +9,7 @@ import org.example.studylog.entity.user.User;
 import org.example.studylog.jwt.JWTUtil;
 import org.example.studylog.repository.UserRepository;
 import org.example.studylog.service.TokenService;
+import org.example.studylog.util.AesGcmEncryptor;
 import org.example.studylog.util.CookieUtil;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseCookie;
@@ -35,14 +36,17 @@ public class CustomSuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
     private final TokenService tokenService;
     private final OAuth2AuthorizedClientService authorizedClientService;
     private final UserRepository userRepository;
+    private final AesGcmEncryptor encryptor;
 
     public CustomSuccessHandler(JWTUtil jwtUtil, TokenService tokenService,
                                 OAuth2AuthorizedClientService authorizedClientService,
-                                UserRepository userRepository) {
+                                UserRepository userRepository,
+                                AesGcmEncryptor encryptor) {
         this.jwtUtil = jwtUtil;
         this.tokenService = tokenService;
         this.authorizedClientService = authorizedClientService;
         this.userRepository = userRepository;
+        this.encryptor = encryptor;
     }
 
     @Override
@@ -68,9 +72,13 @@ public class CustomSuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
 
         if (refreshToken != null) {
             // DB에서 사용자 조회 후 Refresh Token 업데이트
+            log.info("제공자로부터 받은 refreshToken을 DB에 저장");
+            String raw = refreshToken.getTokenValue();
+            String enc = encryptor.encrypt(raw);  // 암호화
             User user = userRepository.findByOauthId(oauthId);
             if (user != null) {
-                user.setRefreshToken(refreshToken.getTokenValue());
+                log.info("최초 로그인 시 RefreshToken 저장");
+                user.setRefreshToken(enc);
                 userRepository.save(user);
             }
         }
