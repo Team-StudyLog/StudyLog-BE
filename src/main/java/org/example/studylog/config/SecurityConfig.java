@@ -14,6 +14,8 @@ import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
+import org.springframework.security.oauth2.client.web.DefaultOAuth2AuthorizationRequestResolver;
 import org.springframework.security.oauth2.client.web.OAuth2LoginAuthenticationFilter;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.cors.CorsConfiguration;
@@ -21,6 +23,10 @@ import org.springframework.web.cors.CorsConfigurationSource;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+
+import static org.springframework.security.oauth2.core.endpoint.OAuth2ParameterNames.REGISTRATION_ID;
 
 
 @Configuration
@@ -42,7 +48,31 @@ public class SecurityConfig {
     }
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception{
+    public SecurityFilterChain filterChain(HttpSecurity http,
+                                           ClientRegistrationRepository repo) throws Exception{
+
+        // 1) 인가요청 리졸버: 구글일 때만 offline/consent 추가
+        var resolver = new DefaultOAuth2AuthorizationRequestResolver(
+                repo, "/oauth2/authorization");
+
+        resolver.setAuthorizationRequestCustomizer(builder -> {
+            // 먼저 한 번 build() 해서 현재 값들을 읽음
+            var req  = builder.build();
+            String regId = (String) req.getAttribute(
+                    org.springframework.security.oauth2.core.endpoint.OAuth2ParameterNames.REGISTRATION_ID
+            );
+
+            if ("google".equals(regId)) {
+                // 기존 추가 파라미터를 보존하면서 병합
+                Map<String, Object> add = new java.util.LinkedHashMap<>(req.getAdditionalParameters());
+                add.put("access_type", "offline");
+                add.put("prompt", "consent");
+
+                // 병합 결과를 빌더에 다시 세팅
+                builder.additionalParameters(add);
+            }
+        });
+
 
         // cors 설정
         http
@@ -90,10 +120,10 @@ public class SecurityConfig {
         http
                 .addFilterAfter(new ProfileCheckFilter(userRepository), OAuth2LoginAuthenticationFilter.class);
 
-        // oauth2
-
+        // OAuth2 로그인: 리졸버 연결 + 기존 설정 유지
         http
                 .oauth2Login((oauth2) -> oauth2
+                        .authorizationEndpoint(a -> a.authorizationRequestResolver(resolver))
                         .userInfoEndpoint((UserInfoEndpointConfig) -> UserInfoEndpointConfig
                                 .userService(customOAuth2UserService))
                         .successHandler(customSuccessHandler)
