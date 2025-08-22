@@ -8,6 +8,7 @@ import org.example.studylog.exception.UserNotFoundException;
 import org.example.studylog.repository.FriendRepository;
 import org.example.studylog.repository.RefreshRepository;
 import org.example.studylog.repository.UserRepository;
+import org.example.studylog.service.oauth.ExternalOAuthUnlinkService;
 import org.example.studylog.util.ResponseUtil;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,6 +23,7 @@ public class UserService {
     private final AwsS3Service awsS3Service;
     private final FriendRepository friendRepository;
     private final RefreshRepository refreshRepository;
+    private final ExternalOAuthUnlinkService externalOAuthUnlinkService;
 
     @Transactional
     public ProfileResponseDTO createUserProfile(ProfileCreateRequestDTO request, String oauthId){
@@ -153,7 +155,11 @@ public class UserService {
         refreshRepository.deleteAllByOauthId(oauthId);
 
         // 3. 외부 연동 해제
-        
+        try {
+            externalOAuthUnlinkService.unlink(user);
+        } catch (Exception e) {
+            log.error("외부 연동 해제 중 오류(계정 삭제는 계속): {}", e.getMessage(), e);
+        }
 
         // 4. 유저 삭제
         userRepository.delete(user);

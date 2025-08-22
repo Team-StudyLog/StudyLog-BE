@@ -122,6 +122,11 @@ public class UserController {
         }
     }
 
+    @Operation(summary = "회원 탈퇴")
+    @ApiResponse(responseCode = "204", description = "유저 삭제 완료",
+            content = @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = ResponseDTO.class)))
     @DeleteMapping
     public ResponseEntity<?> deleteUser(@AuthenticationPrincipal CustomOAuth2User currentUser){
         try {
@@ -138,6 +143,5 @@ public class UserController {
             log.error("유저 삭제 중 오류 발생", e);
             return ResponseUtil.buildResponse(500, "내부 서버 오류입니다", null);
         }
-
     }
 }
