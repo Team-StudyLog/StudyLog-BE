@@ -121,4 +121,27 @@ public class UserController {
             return ResponseUtil.buildResponse(500, "내부 서버 오류입니다", null);
         }
     }
+
+    @Operation(summary = "회원 탈퇴")
+    @ApiResponse(responseCode = "204", description = "유저 삭제 완료",
+            content = @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = ResponseDTO.class)))
+    @DeleteMapping
+    public ResponseEntity<?> deleteUser(@AuthenticationPrincipal CustomOAuth2User currentUser){
+        try {
+            log.info("유저 삭제 요청: 사용자={}", currentUser.getName());
+            String oauthId = currentUser.getName();
+            userService.deleteAccount(oauthId);
+            log.info("유저 삭제 완료: 사용자={}", currentUser.getName());
+
+            return ResponseUtil.buildResponse(204, "유저 삭제 완료", null);
+        } catch (IllegalStateException e){
+            log.warn("유저 삭제 실패 - 잘못된 요청: {}", e.getMessage());
+            return ResponseUtil.buildResponse(400, e.getMessage(), null);
+        } catch (Exception e){
+            log.error("유저 삭제 중 오류 발생", e);
+            return ResponseUtil.buildResponse(500, "내부 서버 오류입니다", null);
+        }
+    }
 }
