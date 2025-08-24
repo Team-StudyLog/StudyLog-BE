@@ -4,6 +4,9 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -11,8 +14,10 @@ import org.example.studylog.dto.*;
 import org.example.studylog.dto.oauth.CustomOAuth2User;
 import org.example.studylog.dto.oauth.TokenDTO;
 import org.example.studylog.service.UserService;
+import org.example.studylog.util.CookieUtil;
 import org.example.studylog.util.ResponseUtil;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -118,6 +123,65 @@ public class UserController {
             return ResponseUtil.buildResponse(400, e.getMessage(), null);
         } catch (Exception e){
             log.error("배경화면 수정 중 오류 발생", e);
+            return ResponseUtil.buildResponse(500, "내부 서버 오류입니다", null);
+        }
+    }
+
+    @Operation(summary = "로그아웃 API")
+    @ApiResponse(responseCode = "204", description = "로그아웃 완료",
+            content = @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = ResponseDTO.class)))
+    @PostMapping("/logout")
+    public ResponseEntity<?> logout(@AuthenticationPrincipal CustomOAuth2User currentUser,
+                                    HttpServletRequest request,
+                                    HttpServletResponse response){
+        // 쿠키에서 refresh 토큰 얻기
+        String refresh = null;
+        Cookie[] cookies = request.getCookies();
+        for(Cookie cookie : cookies){
+            if(cookie.getName().equals("refresh")){
+                refresh = cookie.getValue();
+            }
+        }
+
+        log.info("사용자 로그아웃 시작: 사용자 = {}", currentUser.getName());
+        userService.logout(refresh);
+
+        log.info("쿠키 만료 재발급");
+        ResponseCookie cookie = CookieUtil.createCookie("refresh", "");
+        response.addHeader("Set-Cookie", cookie.toString());
+
+        log.info("사용자 로그아웃 완료: 사용자 = {}", currentUser.getName());
+
+        return ResponseUtil.buildResponse(204, "로그아웃 완료", null);
+    }
+
+
+    @Operation(summary = "회원 탈퇴")
+    @ApiResponse(responseCode = "204", description = "유저 삭제 완료",
+            content = @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = ResponseDTO.class)))
+    @DeleteMapping
+    public ResponseEntity<?> deleteUser(@AuthenticationPrincipal CustomOAuth2User currentUser,
+                                        HttpServletResponse response){
+        try {
+            log.info("유저 삭제 요청: 사용자={}", currentUser.getName());
+            String oauthId = currentUser.getName();
+            userService.deleteAccount(oauthId);
+
+            ResponseCookie cookie = CookieUtil.createCookie("refresh", "");
+            response.addHeader("Set-Cookie", cookie.toString());
+
+            log.info("유저 삭제 완료: 사용자={}", currentUser.getName());
+
+            return ResponseUtil.buildResponse(204, "유저 삭제 완료", null);
+        } catch (IllegalStateException e){
+            log.warn("유저 삭제 실패 - 잘못된 요청: {}", e.getMessage());
+            return ResponseUtil.buildResponse(400, e.getMessage(), null);
+        } catch (Exception e){
+            log.error("유저 삭제 중 오류 발생", e);
             return ResponseUtil.buildResponse(500, "내부 서버 오류입니다", null);
         }
     }
