@@ -139,6 +139,14 @@ public class UserService {
         return responseDTO;
     }
 
+    public void logout(String refresh) {
+        // 리프레시 토큰이 DB에 존재하면 삭제
+        if(refresh != null){
+            log.info("로그아웃 요청으로 인한 RefreshToken 삭제");
+            refreshRepository.deleteByRefresh(refresh);
+        }
+    }
+
     @Transactional
     public void deleteAccount(String oauthId) {
         User user = userRepository.findByOauthId(oauthId);
