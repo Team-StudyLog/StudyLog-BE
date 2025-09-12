@@ -11,9 +11,10 @@ import java.util.List;
 @AllArgsConstructor
 public class ChatGptRequest {
 
-    private String model = "gpt-3.5-turbo";
+    private String model;
     private List<Message> messages;
-    private double temperature = 0.7;
+    private double temperature;
+    private double frequency_penalty;
 
     @Data
     @AllArgsConstructor

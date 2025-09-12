@@ -27,8 +27,12 @@ import org.springframework.transaction.annotation.Transactional;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.time.LocalDate;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Service
 @RequiredArgsConstructor
@@ -61,12 +65,15 @@ public class QuizService {
         Category category = studyRecord.getCategory();
 
         // 프롬프트 생성
-        String prompt = buildPrompt(requestDTO, studyRecord.getContent());
+        String prompt_system = buildSystemPrompt(requestDTO.getLevel().getLabel());
+        String prompt_user = buildUserPrompt(requestDTO, studyRecord.getContent());
 
         // GPT에게 보낼 요청 생성
         ChatGptRequest request = new ChatGptRequest(
-                "gpt-3.5-turbo",
-                List.of(new ChatGptRequest.Message("user", prompt)),
+                "gpt-4o-mini",
+                List.of(new ChatGptRequest.Message("system", prompt_system),
+                        new ChatGptRequest.Message("user", prompt_user)),
+                0.7,
                 0.7
         );
 
@@ -108,6 +115,86 @@ public class QuizService {
         }).toList();
 
         return quizResponseList;
+    }
+
+    private String buildSystemPrompt(String level) {
+        List<String> MID_KEYWORDS = Arrays.asList(
+                "언제", "상황", "조건", "사례", "선택", "방법", "절차", "방식", "기준", "요건"
+        );
+
+        List<String> HIGH_KEYWORDS = Arrays.asList(
+                "차이", "왜", "예외", "한계", "내부", "구조", "원리", "특징", "문제점", "비교", "영향"
+        );
+        String common = (
+                "역할: 퀴즈 생성 도우미(한국어). 출력은 오직 JSON 배열.\n" +
+                        "스키마:\n" +
+                        "[\n" +
+                        "    {\"question\":\"...\", \"answer\":\"...\", \"type\":\"OX|SHORT_ANSWER\", \"level\":\"하|중|상\"}\n" +
+                        "]\n" +
+                        "공통 규칙:\n" +
+                        "- 존댓말 사용.\n" +
+                        "- answer=SHORT_ANSWER이면, 어미 제거 후 답만 반환\n" +
+                        "- 모든 항목의 level은 '" + level + "' 이어야 한다(다른 값 금지).\n" +
+                        "- 출력은 반드시 대괄호로 시작/끝나는 순수 JSON 배열. 어떤 객체/키로도 감싸지 말 것.\n" +
+                        "- 마크다운/설명/주석/코드블록 금지."
+        );
+
+        String body;
+
+        if ("하".equals(level)) {
+            String forbidden = Stream.concat(MID_KEYWORDS.stream(), HIGH_KEYWORDS.stream())
+                    .map(s -> "'" + s + "'")
+                    .collect(Collectors.joining(", "));
+            body = (
+                    "레벨 규칙(하):\n" +
+                            "- type=OX 만 허용.\n" +
+                            "- question: 진술형 한 문장, 물음표 금지.\n" +
+                            "- question에 다음 단어 금지: [" + forbidden + "]\n" +
+                            "- answer는 반드시 \"O\" 또는 \"X\"."
+            );
+        } else if ("중".equals(level)) {
+            String keywords = MID_KEYWORDS.stream()
+                    .map(s -> "'" + s + "'")
+                    .collect(Collectors.joining(", "));
+            body = (
+                    "레벨 규칙(중):\n" +
+                            "- type=SHORT_ANSWER 만 허용.\n" +
+                            "- question에는 반드시 다음 키워드 중 하나 이상 포함: [" + keywords + "]\n" +
+                            "- 반드시 '?'로 끝나야 함.\n" +
+                            "- answer ≤ 20자."
+            );
+        } else { // "상"
+            String keywords = HIGH_KEYWORDS.stream()
+                    .map(s -> "'" + s + "'")
+                    .collect(Collectors.joining(", "));
+            body = (
+                    "레벨 규칙(상):\n" +
+                            "- type=SHORT_ANSWER 만 허용.\n" +
+                            "- question에는 반드시 다음 키워드 중 하나 이상 포함: [" + keywords + "]\n" +
+                            "- 반드시 '?'로 끝나야 함.\n" +
+                            "- answer ≤ 40자.\n" +
+                            "- answer는 질문의 키워드와 직접적으로 대응되는 설명을 포함해야 하며, 단순 키워드 나열 금지.\n" +
+                            "- answer는 최소 2가지 이상의 구체적 포인트(예: 구조적 특징 2개, 한계 2개)를 포함해야 함."
+            );
+        }
+
+        return common + "\n" + body;
+
+    }
+
+    private String buildUserPrompt(CreateQuizRequestDTO dto, String content) {
+        return String.format("""
+                생성 조건
+                - 주제: %s
+                - 난이도: %s
+                - 개수: %d
+                %s
+                레벨 규칙과 스키마를 반드시 준수.
+                """,
+                content,
+                dto.getLevel().getLabel(),
+                dto.getQuizCount(),
+                dto.getRequirement() != null ? "- 참고사항: " + dto.getRequirement() : "");
     }
 
     private String buildPrompt(CreateQuizRequestDTO dto, String content){
