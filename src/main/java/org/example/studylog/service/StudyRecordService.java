@@ -10,6 +10,7 @@ import org.example.studylog.entity.category.Category;
 import org.example.studylog.entity.StudyRecord;
 import org.example.studylog.entity.Streak;
 import org.example.studylog.entity.user.User;
+import org.example.studylog.event.RecordCreatedEvent;
 import org.example.studylog.event.RecordEvent;
 import org.example.studylog.repository.CategoryRepository;
 import org.example.studylog.repository.StudyRecordRepository;
@@ -113,6 +114,8 @@ public class StudyRecordService {
         log.info("기록 생성 이벤트 발행: USER={}, ID={}", user.getOauthId(), savedStudyRecord.getId());
         user.incrementRecordCount();
         eventPublisher.publishEvent(new RecordEvent(user));
+        LocalDate now = LocalDate.now();
+        eventPublisher.publishEvent(new RecordCreatedEvent(user.getId(), now.getYear(), now.getMonthValue()));
         log.info("기록 생성 이벤트 종료: USER={}, ID={}", user.getOauthId(), savedStudyRecord.getId());
 
         // 4. 응답 DTO 생성
