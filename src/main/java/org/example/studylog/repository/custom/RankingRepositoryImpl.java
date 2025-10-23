@@ -5,6 +5,7 @@ import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.example.studylog.dto.RankingResponseDTO;
 import org.example.studylog.entity.QUserMonthlyStat;
 import org.example.studylog.entity.UserMonthlyStat;
@@ -13,6 +14,7 @@ import org.example.studylog.entity.user.User;
 import org.springframework.stereotype.Repository;
 import java.util.List;
 
+@Slf4j
 @Repository
 @RequiredArgsConstructor
 public class RankingRepositoryImpl implements RankingRepositoryCustom{
@@ -83,6 +85,29 @@ public class RankingRepositoryImpl implements RankingRepositoryCustom{
                     .columns(stat.user, stat.year, stat.month, stat.recordCount)
                     .values(newStat.getUser(), newStat.getYear(), newStat.getMonth(), newStat.getRecordCount())
                     .execute();
+        }
+    }
+
+    @Override
+    @Transactional
+    public void decrement(Long userId, int year, int month) {
+        QUserMonthlyStat stat = QUserMonthlyStat.userMonthlyStat;
+        // 존재하는 경우에만 recordCount - 1
+        long updated = queryFactory
+                .update(stat)
+                .set(stat.recordCount, stat.recordCount.subtract(1))
+                .where(
+                        stat.user.id.eq(userId),
+                        stat.year.eq(year),
+                        stat.month.eq(month),
+                        stat.recordCount.gt(0) // 음수 방지
+                )
+                .execute();
+
+        // 혹시라도 업데이트된 행이 없다면 (예: 존재하지 않거나 이미 0인 경우)
+        if (updated == 0) {
+            log.warn("user_monthly_stat에 행이 없거나 recordCount가 이미 0: userId={}, year={}, month={}",
+                    userId, year, month);
         }
     }
 }
