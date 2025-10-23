@@ -11,6 +11,7 @@ import org.example.studylog.entity.StudyRecord;
 import org.example.studylog.entity.Streak;
 import org.example.studylog.entity.user.User;
 import org.example.studylog.event.RecordCreatedEvent;
+import org.example.studylog.event.RecordDeletedEvent;
 import org.example.studylog.event.RecordEvent;
 import org.example.studylog.repository.CategoryRepository;
 import org.example.studylog.repository.StudyRecordRepository;
@@ -83,6 +84,11 @@ public class StudyRecordService {
         user.decrementRecordCount();
         log.info("기록 삭제 이벤트 발행: USER={}, ID={}", user.getOauthId(), recordId);
         eventPublisher.publishEvent(new RecordEvent(user));
+        LocalDate createDate = studyRecord.getCreateDate().toLocalDate();
+        int year = createDate.getYear();
+        int month = createDate.getMonthValue();
+        log.info("기록 삭제 내역을 랭킹 집계 테이블에 반영: USER={}, YEAR={}, MONTH={}", user.getId(), year, month);
+        eventPublisher.publishEvent(new RecordDeletedEvent(user.getId(), year, month));
 
         log.info("기록 삭제 완료: ID={}", recordId);
     }
